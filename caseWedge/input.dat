@@ -14,7 +14,7 @@ BCleft, inlet
 BCright, outlet
 
 interpE, 0.01
-MUSCL, 1
+MUSCL, 0
 stages, 5
 threads, 4
 flux, AUSMD

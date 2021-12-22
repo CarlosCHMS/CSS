@@ -49,9 +49,26 @@ class solution():
         V = numpy.sqrt(u**2 + v**2)
         
         self.mach = V/c
+        self.u = u        
+        self.v = v
         
         return None        
-                
+
+def levelsCalc(v, n):    
+
+    max1 = v[0][0]
+    min1 = v[0][0]
+    for ii in range(0, v.shape[0]):
+        for jj in range(0, v.shape[1]):
+            max1 = max(v[ii][jj], max1)
+            min1 = min(v[ii][jj], min1)
+                            
+    d = (max1-min1)/(n-1)
+    levels = []
+    for ii in range(0, n):
+        levels.append(min1 + d*ii)
+    
+    return levels                
     
 if __name__=="__main__":
 
@@ -99,7 +116,7 @@ if __name__=="__main__":
     
     plt.figure()
     plt.title("rv")
-    plt.contourf(s.x, s.y, s.rv)
+    plt.contourf(s.x, s.y, s.rv, levels=levelsCalc(s.rv, 10))
     plt.axis("equal")
     plt.colorbar()    
     plt.show()    
@@ -123,7 +140,5 @@ if __name__=="__main__":
     plt.plot(s.y[70, :], s.p[70, :], '.-')
     plt.plot(s.y[70, :], s.y[70, :]*0 + 1e5)    
     plt.plot(s.y[70, :], s.y[70, :]*0 + 1e5*1.70657860)
-
     plt.show()    
-        
-        
+
