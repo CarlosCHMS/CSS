@@ -42,6 +42,7 @@ typedef struct {
     int MUSCL;
     int flux;
     int stages;
+    int dtFix;
 
     double Rgas;
     double gamma;
@@ -826,18 +827,77 @@ void boundary(SOLVER* solver, double*** U)
 
 }
 
-void solverCalcR(SOLVER* solver, double*** U)
+// New functions
+
+void meshCalcDSI(MESH* mesh, int ii, int jj, double* dSx, double* dSy)
 {
 
-    solverResetR(solver);
+    double dSx0 = (mesh->y[ii][jj+1] - mesh->y[ii][jj]);
+    double dSy0 = -(mesh->x[ii][jj+1] - mesh->x[ii][jj]);
+	
+	ii += 1;
+    double dSx1 = (mesh->y[ii][jj+1] - mesh->y[ii][jj]);
+    double dSy1 = -(mesh->x[ii][jj+1] - mesh->x[ii][jj]);
 
-    inter(solver, U);
-    
-    boundary(solver, U);  
+	*dSx = (dSx0 + dSx1)/2.;
+	*dSy = (dSy0 + dSy1)/2.;
 
 }
 
-void solverRK(SOLVER* solver, double a)
+void meshCalcDSJ(MESH* mesh, int ii, int jj, double* dSx, double* dSy)
+{
+
+    double dSx0 = -(mesh->y[ii+1][jj] - mesh->y[ii][jj]);
+    double dSy0 = (mesh->x[ii+1][jj] - mesh->x[ii][jj]);
+	
+	jj += 1;
+    double dSx1 = -(mesh->y[ii+1][jj] - mesh->y[ii][jj]);
+    double dSy1 = (mesh->x[ii+1][jj] - mesh->x[ii][jj]);
+
+	*dSx = (dSx0 + dSx1)/2.;
+	*dSy = (dSy0 + dSy1)/2.;
+
+}
+
+void calcSpectralRad(SOLVER* solver, double*** U, int ii, int jj, double* LcI, double* LcJ)
+{
+
+    double u, v, c, dSx, dSy, dS;
+
+    solverCalcVel(solver, U, ii, jj, &u, &v, &c);
+
+    meshCalcDSI(solver->mesh, ii, jj, &dSx, &dSy);
+    dS = sqrt(dSx*dSx + dSy*dSy);
+    *LcI = (fabs(u*dSx + v*dSy) + c*dS);
+
+
+    meshCalcDSJ(solver->mesh, ii, jj, &dSx, &dSy);
+    dS = sqrt(dSx*dSx + dSy*dSy);
+    *LcJ = (fabs(u*dSx + v*dSy) + c*dS);
+
+}
+
+void solverPrintTimeStep(SOLVER* solver)
+{
+    for(int ii=0; ii<solver->mesh->Nrow-1; ii++)
+    {
+        for(int jj=0; jj<solver->mesh->Ncol-1; jj++)
+        {
+
+            double omega = meshCalcOmega(solver->mesh, ii, jj);
+            double LcI, LcJ;
+            calcSpectralRad(solver, solver->U, ii, jj, &LcI, &LcJ);
+
+			double dt = 0.5*solver->stages*omega/(LcI + LcJ);
+
+			printf("%.4e, %.4e\n", dt, solver->dt);
+
+        }
+    }
+
+}
+
+void solverRK_dtFix(SOLVER* solver, double a)
 {
 
     # pragma omp parallel for
@@ -854,6 +914,55 @@ void solverRK(SOLVER* solver, double a)
             }
         }
     }
+
+}
+
+
+void solverRK_dtLocal(SOLVER* solver, double a)
+{
+
+    # pragma omp parallel for
+    for(int ii=0; ii<solver->mesh->Nrow-1; ii++)
+    {
+        for(int jj=0; jj<solver->mesh->Ncol-1; jj++)
+        {
+            double LcI, LcJ;
+            calcSpectralRad(solver, solver->U, ii, jj, &LcI, &LcJ);
+            for(int kk=0; kk<4; kk++)
+            {
+                
+                solver->Uaux[kk][ii][jj] = solver->U[kk][ii][jj] - 0.5*solver->stages*a*solver->R[kk][ii][jj]/(LcI + LcJ);
+                
+            }
+        }
+    }
+
+}
+
+void solverRK(SOLVER* solver, double a)
+{
+
+    if(solver->dtFix == 1)
+    {
+        solverRK_dtFix(solver, a);
+    }
+    else
+    {
+        solverRK_dtLocal(solver, a);
+    }
+
+}
+
+// end new functions
+
+void solverCalcR(SOLVER* solver, double*** U)
+{
+
+    solverResetR(solver);
+
+    inter(solver, U);
+    
+    boundary(solver, U);  
 
 }
 
@@ -1056,11 +1165,14 @@ int main(int argc, char **argv)
     solverInitU(solver);
     
     // Calculate time step
+    
+    solver->stages = atoi(inputGetValue(input, "stages"));
+    solver->dtFix = 0;
+
     double CFL = strtod(inputGetValue(input, "CFL"), NULL);        
     double delta = meshDeltaMin(solver->mesh);
-    double Vref = conditionVref(solver->inlet, solver);
-    solver->stages = atoi(inputGetValue(input, "stages"));
-    solver->dt = 0.5*solver->stages*CFL*delta/Vref;  
+    double Vref = conditionVref(solver->inlet, solver);    
+    solver->dt = 0.5*solver->stages*CFL*delta/Vref;    
 
     // Run the solver
     int Nmax = atoi(inputGetValue(input, "Nmax")); 
@@ -1086,7 +1198,9 @@ int main(int argc, char **argv)
     strcat(s, argv[1]);
     strcat(s, "solution.csv");
     solverWriteU(solver, s);
-           
+       
+	//solverPrintTimeStep(solver);
+    
     // Free memory 
     solverFree(solver);
     inputFree(input);
