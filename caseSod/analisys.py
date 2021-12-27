@@ -4,6 +4,7 @@ import numpy
 import matplotlib.pyplot as plt
 from readTables import readTables
 import sys
+import characteristics as ch
  
 class solution():
 
@@ -49,26 +50,10 @@ class solution():
         V = numpy.sqrt(u**2 + v**2)
         
         self.mach = V/c
-        self.u = u        
-        self.v = v
+        self.u = u
         
         return None        
-
-def levels(v, n):    
-
-    max1 = v[0][0]
-    min1 = v[0][0]
-    for ii in range(0, v.shape[0]):
-        for jj in range(0, v.shape[1]):
-            max1 = max(v[ii][jj], max1)
-            min1 = min(v[ii][jj], min1)
-                            
-    d = (max1-min1)/(n-1)
-    levels = []
-    for ii in range(0, n):
-        levels.append(min1 + d*ii)
-    
-    return levels                
+                
     
 if __name__=="__main__":
 
@@ -99,53 +84,47 @@ if __name__=="__main__":
     plt.axis("equal")
     plt.colorbar()    
     plt.show()    
-
-    plt.figure()
-    plt.title("r")
-    plt.contourf(s.x, s.y, s.r)
-    plt.axis("equal")
-    plt.colorbar()    
-    plt.show()    
-            
-    plt.figure()
-    plt.title("ru")
-    plt.contourf(s.x, s.y, s.ru)
-    plt.axis("equal")
-    plt.colorbar()    
-    plt.show()            
-    
-    plt.figure()
-    plt.title("rv")
-    plt.contourf(s.x, s.y, s.rv, levels=levels(s.rv, 10))
-    plt.axis("equal")
-    plt.colorbar()    
-    plt.show()    
-
-    plt.figure()
-    plt.title("rE")
-    plt.contourf(s.x, s.y, s.rE)
-    plt.axis("equal")
-    plt.colorbar()    
-    plt.show()    
-        
-    plt.figure()
-    plt.title("mach")
-    plt.plot(s.y[70, :], s.mach[70, :], '.-')
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 2.0)    
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 1.64052221)
-    plt.show()    
-        
-    plt.figure()
-    plt.title("pressure")
-    plt.plot(s.y[70, :], s.p[70, :], '.-')
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 1e5)    
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 1e5*1.70657860)
-
-    plt.show()    
-        
-    plt.figure()
-    plt.title("rv")
-    plt.plot(s.y[70, :], s.rv[70, :])
-    plt.show()    
     
         
+    n = int(s.x.shape[1]/2)
+    x = s.x[:, n]   
+        
+    char1 = ch.problem(xchange=25.0, p1=1e4, T1=240, p4=1e5, T4=300)
+    charVar = char1.calcVar(0.02, x)
+
+    v = 'rho'
+    plt.figure()
+    plt.plot(charVar['x'], charVar[v],'-b')
+    plt.plot(x, s.r[:,n],'.r')
+    plt.legend(['charac.', 'CFD'])
+    plt.title(v)
+    plt.grid(True)
+    plt.show()
+    
+    v = 'u'
+    plt.figure()
+    plt.plot(charVar['x'], charVar[v],'-b')
+    plt.plot(x, s.u[:,n],'.r')
+    plt.legend(['charac.', 'CFD'])
+    plt.title(v)
+    plt.grid(True)
+    plt.show()    
+    
+    v = 'p'
+    plt.figure()
+    plt.plot(charVar['x'], charVar[v],'-b')
+    plt.plot(x, s.p[:,n],'.r')
+    plt.legend(['charac.', 'CFD'])
+    plt.title(v)
+    plt.grid(True)
+    plt.show()    
+    
+    v = 'mach'
+    mach = charVar['u']/numpy.sqrt(1.4*charVar['p']/charVar['rho'])
+    plt.figure()
+    plt.plot(charVar['x'], mach,'-b')
+    plt.plot(x, s.mach[:,n],'.r')
+    plt.legend(['charac.', 'CFD'])
+    plt.title(v)
+    plt.grid(True)
+    plt.show()    

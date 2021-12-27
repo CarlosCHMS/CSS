@@ -46,41 +46,30 @@ class basic():
             ff.write('\n')
             
         ff.close()    
-
-
-class wedge(basic):
-
-    def __init__(self, x0, x1, y0, n0, n1, n2, alpha):
-    
-        a = numpy.tan(alpha*numpy.pi/180)
-    
-        self.x0 = x0
-        self.x1 = x1
-        self.y0 = y0
-                
-        self.x = numpy.zeros((n0+n1, n2))
-        self.y = numpy.zeros((n0+n1, n2))
         
-        dx = self.x0/n0
-        dy = y0/(n2-1)
+class cylinder(basic):
+
+    def __init__(self, r0, r1, n0, n1):
+                
+        self.x = numpy.zeros((n0, n1))
+        self.y = numpy.zeros((n0, n1))
+        
+        t0 = 0
+        
+        dt = (numpy.pi/2 - 0)/(n0-1)
+        q = (r1/r0)**(1/(n1-1))
         for ii in range(0, n0):
-            for jj in range(0, n2):                    
-                self.x[ii, jj] = dx*ii
-                self.y[ii, jj] = dy*jj
+            t = ii*dt + t0            
+            for jj in range(0, n1):
+                r = r0*(q**jj)                    
+                self.x[ii, jj] = -r*numpy.cos(t)
+                self.y[ii, jj] = r*numpy.sin(t)
+                            
             
-        dx = self.x1/(n1 - 1)
-        for ii in range(0, n1):
-            xaux = dx*ii
-            yaux = a*xaux
-            dy = (y0 - yaux)/(n2-1)
-            for jj in range(0, n2):                    
-                self.x[ii + n0, jj] = x0 + xaux
-                self.y[ii + n0, jj] = yaux + dy*jj
-                       
                  
 if __name__=='__main__':
 
-    w = wedge(0.1, 0.4, 0.5, 16, 64, 80, 10)
+    w = cylinder(0.5, 2.5, 80, 100) 
     w.plot()        
     w.write()
     

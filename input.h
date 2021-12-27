@@ -3,12 +3,13 @@ typedef struct
 {
 
     int N;
+    int Nmax;
     char** name;
     char** value;
 
 } INPUT;
 
-INPUT* inputInit(char* fileName);
+INPUT* inputInit(char* fileName, int N);
 
 void inputPrint(INPUT* input);
 

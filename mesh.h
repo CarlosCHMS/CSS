@@ -16,3 +16,8 @@ double meshDeltaMin(MESH* mesh);
 double meshCalcOmega(MESH* mesh, int ii, int jj);
 
 void meshPrintOmega(MESH* mesh);
+
+void meshCalcDSI(MESH* mesh, int ii, int jj, double* dSx, double* dSy);
+
+void meshCalcDSJ(MESH* mesh, int ii, int jj, double* dSx, double* dSy);
+

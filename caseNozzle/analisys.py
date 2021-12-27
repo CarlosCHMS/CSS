@@ -49,26 +49,9 @@ class solution():
         V = numpy.sqrt(u**2 + v**2)
         
         self.mach = V/c
-        self.u = u        
-        self.v = v
         
         return None        
-
-def levels(v, n):    
-
-    max1 = v[0][0]
-    min1 = v[0][0]
-    for ii in range(0, v.shape[0]):
-        for jj in range(0, v.shape[1]):
-            max1 = max(v[ii][jj], max1)
-            min1 = min(v[ii][jj], min1)
-                            
-    d = (max1-min1)/(n-1)
-    levels = []
-    for ii in range(0, n):
-        levels.append(min1 + d*ii)
-    
-    return levels                
+                
     
 if __name__=="__main__":
 
@@ -99,53 +82,4 @@ if __name__=="__main__":
     plt.axis("equal")
     plt.colorbar()    
     plt.show()    
-
-    plt.figure()
-    plt.title("r")
-    plt.contourf(s.x, s.y, s.r)
-    plt.axis("equal")
-    plt.colorbar()    
-    plt.show()    
-            
-    plt.figure()
-    plt.title("ru")
-    plt.contourf(s.x, s.y, s.ru)
-    plt.axis("equal")
-    plt.colorbar()    
-    plt.show()            
-    
-    plt.figure()
-    plt.title("rv")
-    plt.contourf(s.x, s.y, s.rv, levels=levels(s.rv, 10))
-    plt.axis("equal")
-    plt.colorbar()    
-    plt.show()    
-
-    plt.figure()
-    plt.title("rE")
-    plt.contourf(s.x, s.y, s.rE)
-    plt.axis("equal")
-    plt.colorbar()    
-    plt.show()    
-        
-    plt.figure()
-    plt.title("mach")
-    plt.plot(s.y[70, :], s.mach[70, :], '.-')
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 2.0)    
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 1.64052221)
-    plt.show()    
-        
-    plt.figure()
-    plt.title("pressure")
-    plt.plot(s.y[70, :], s.p[70, :], '.-')
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 1e5)    
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 1e5*1.70657860)
-
-    plt.show()    
-        
-    plt.figure()
-    plt.title("rv")
-    plt.plot(s.y[70, :], s.rv[70, :])
-    plt.show()    
-    
         

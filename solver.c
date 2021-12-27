@@ -42,7 +42,6 @@ typedef struct {
     int MUSCL;
     int flux;
     int stages;
-    int dtFix;
 
     double Rgas;
     double gamma;
@@ -60,7 +59,6 @@ typedef struct {
     double ***Uaux;        
     
     CONDITION* inlet;
-    CONDITION* inside;    
         
     MESH* mesh;
     
@@ -200,10 +198,10 @@ void solverAllocate(SOLVER* solver)
         
 }
 
-void solverInitU(SOLVER* solver)
+void solverInitU(SOLVER* solver, CONDITION* inside)
 {
 
-    conditionState(solver->inside, solver);
+    conditionState(inside, solver);
 
     for(int kk=0; kk<4; kk++)
     {
@@ -211,7 +209,36 @@ void solverInitU(SOLVER* solver)
         {
             for(int jj=0; jj<solver->Ncol; jj++)
             {
-                solver->U[kk][ii][jj] = solver->inside->Uin[kk];
+                solver->U[kk][ii][jj] = inside->Uin[kk];
+            }
+
+        }
+    }
+}
+
+void solverInitUTube(SOLVER* solver, CONDITION* inside1, CONDITION* inside2, double xm)
+{
+
+    double x;
+
+    conditionState(inside1, solver);
+    conditionState(inside2, solver);
+
+    for(int kk=0; kk<4; kk++)
+    {
+        for(int ii=0; ii<solver->Nrow; ii++)
+        {
+            for(int jj=0; jj<solver->Ncol; jj++)
+            {
+                x = 0.5*(solver->mesh->x[ii+1][jj] + solver->mesh->x[ii][jj]);
+                if(x<xm)
+                {
+                    solver->U[kk][ii][jj] = inside1->Uin[kk];
+                }
+                else
+                {
+                    solver->U[kk][ii][jj] = inside2->Uin[kk];
+                }
             }
 
         }
@@ -465,8 +492,8 @@ void interpMUSCL_iiL1(double **U, int ii, int jj, double *UL, double e)
     double a = U[ii+1][jj] - U[ii][jj];
     double b = U[ii][jj] - U[ii-1][jj];
 
-    double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
-    //double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
+    //double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
+    double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
     
     *UL = U[ii][jj] + 0.5*delta;
 
@@ -478,8 +505,8 @@ void interpMUSCL_iiR1(double **U, int ii1, int jj, double *UR, double e)
     double a = U[ii1+1][jj] - U[ii1][jj];
     double b = U[ii1][jj] - U[ii1-1][jj];
 
-    double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
-    //double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
+    //double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
+    double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
     
     *UR = U[ii1][jj] - 0.5*delta;
 
@@ -491,8 +518,8 @@ void interpMUSCL_jjL1(double **U, int ii, int jj, double *UL, double e)
     double a = U[ii][jj+1] - U[ii][jj];
     double b = U[ii][jj] - U[ii][jj-1];
 
-    double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
-    //double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
+    //double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
+    double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
     
     *UL = U[ii][jj] + 0.5*delta;
 
@@ -504,8 +531,8 @@ void interpMUSCL_jjR1(double **U, int ii, int jj1, double *UR, double e)
     double a = U[ii][jj1+1] - U[ii][jj1];
     double b = U[ii][jj1] - U[ii][jj1-1];
 
-    double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
-    //double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
+    //double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
+    double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
     
     *UR = U[ii][jj1] - 0.5*delta;
 
@@ -827,38 +854,6 @@ void boundary(SOLVER* solver, double*** U)
 
 }
 
-// New functions
-
-void meshCalcDSI(MESH* mesh, int ii, int jj, double* dSx, double* dSy)
-{
-
-    double dSx0 = (mesh->y[ii][jj+1] - mesh->y[ii][jj]);
-    double dSy0 = -(mesh->x[ii][jj+1] - mesh->x[ii][jj]);
-	
-	ii += 1;
-    double dSx1 = (mesh->y[ii][jj+1] - mesh->y[ii][jj]);
-    double dSy1 = -(mesh->x[ii][jj+1] - mesh->x[ii][jj]);
-
-	*dSx = (dSx0 + dSx1)/2.;
-	*dSy = (dSy0 + dSy1)/2.;
-
-}
-
-void meshCalcDSJ(MESH* mesh, int ii, int jj, double* dSx, double* dSy)
-{
-
-    double dSx0 = -(mesh->y[ii+1][jj] - mesh->y[ii][jj]);
-    double dSy0 = (mesh->x[ii+1][jj] - mesh->x[ii][jj]);
-	
-	jj += 1;
-    double dSx1 = -(mesh->y[ii+1][jj] - mesh->y[ii][jj]);
-    double dSy1 = (mesh->x[ii+1][jj] - mesh->x[ii][jj]);
-
-	*dSx = (dSx0 + dSx1)/2.;
-	*dSy = (dSy0 + dSy1)/2.;
-
-}
-
 void calcSpectralRad(SOLVER* solver, double*** U, int ii, int jj, double* LcI, double* LcJ)
 {
 
@@ -870,34 +865,62 @@ void calcSpectralRad(SOLVER* solver, double*** U, int ii, int jj, double* LcI, d
     dS = sqrt(dSx*dSx + dSy*dSy);
     *LcI = (fabs(u*dSx + v*dSy) + c*dS);
 
-
     meshCalcDSJ(solver->mesh, ii, jj, &dSx, &dSy);
     dS = sqrt(dSx*dSx + dSy*dSy);
     *LcJ = (fabs(u*dSx + v*dSy) + c*dS);
 
 }
 
-void solverPrintTimeStep(SOLVER* solver)
+double solverCalcDt(SOLVER* solver)
 {
-    for(int ii=0; ii<solver->mesh->Nrow-1; ii++)
+    double dt, dtMin;
+    double LcI, LcJ;
+    double omega;
+
+    for(int ii=0; ii<solver->Nrow; ii++)
     {
-        for(int jj=0; jj<solver->mesh->Ncol-1; jj++)
+        for(int jj=0; jj<solver->Ncol; jj++)
         {
 
-            double omega = meshCalcOmega(solver->mesh, ii, jj);
-            double LcI, LcJ;
+            omega = meshCalcOmega(solver->mesh, ii, jj);
+
             calcSpectralRad(solver, solver->U, ii, jj, &LcI, &LcJ);
 
-			double dt = 0.5*solver->stages*omega/(LcI + LcJ);
+			dt = 0.5*solver->stages*omega/(LcI + LcJ);
 
-			printf("%.4e, %.4e\n", dt, solver->dt);
+            
+            if(ii==0 & jj==0)
+            {
+                dtMin = dt;
+            }
+            else
+            {
+                if(dt<dtMin)
+                {
+                    dtMin = dt;
+                }
+            }
+            
 
         }
     }
 
+    return dtMin;
+
 }
 
-void solverRK_dtFix(SOLVER* solver, double a)
+void solverCalcR(SOLVER* solver, double*** U)
+{
+
+    solverResetR(solver);
+
+    inter(solver, U);
+    
+    boundary(solver, U);  
+
+}
+
+void solverRK(SOLVER* solver, double a)
 {
 
     # pragma omp parallel for
@@ -914,55 +937,6 @@ void solverRK_dtFix(SOLVER* solver, double a)
             }
         }
     }
-
-}
-
-
-void solverRK_dtLocal(SOLVER* solver, double a)
-{
-
-    # pragma omp parallel for
-    for(int ii=0; ii<solver->mesh->Nrow-1; ii++)
-    {
-        for(int jj=0; jj<solver->mesh->Ncol-1; jj++)
-        {
-            double LcI, LcJ;
-            calcSpectralRad(solver, solver->U, ii, jj, &LcI, &LcJ);
-            for(int kk=0; kk<4; kk++)
-            {
-                
-                solver->Uaux[kk][ii][jj] = solver->U[kk][ii][jj] - 0.5*solver->stages*a*solver->R[kk][ii][jj]/(LcI + LcJ);
-                
-            }
-        }
-    }
-
-}
-
-void solverRK(SOLVER* solver, double a)
-{
-
-    if(solver->dtFix == 1)
-    {
-        solverRK_dtFix(solver, a);
-    }
-    else
-    {
-        solverRK_dtLocal(solver, a);
-    }
-
-}
-
-// end new functions
-
-void solverCalcR(SOLVER* solver, double*** U)
-{
-
-    solverResetR(solver);
-
-    inter(solver, U);
-    
-    boundary(solver, U);  
 
 }
 
@@ -985,12 +959,7 @@ void solverUpdateU(SOLVER* solver)
 void solverStepRK(SOLVER* solver)
 {   
 
-    if(solver->stages==1)
-    {
-        solverCalcR(solver, solver->U);
-        solverRK(solver, 1.);    
-    }
-    else if(solver->stages==3)
+    if(solver->stages==3)
     {
         solverCalcR(solver, solver->U);
         solverRK(solver, 0.1481);
@@ -1062,29 +1031,29 @@ void solverWriteU(SOLVER* solver, char* fileName)
 void solverCalcRes(SOLVER* solver)
 {
     
+    double aux;
+    
     for(int kk=0; kk<4; kk++)
     {
-        solver->res[kk] = 0.0;
+        solver->res[kk] = fabs(solver->R[kk][0][0]);
     }
     
-    # pragma omp parallel for
     for(int ii=0; ii<solver->mesh->Nrow-1; ii++)
     {
         for(int jj=0; jj<solver->mesh->Ncol-1; jj++)
         {
-            double omega = meshCalcOmega(solver->mesh, ii, jj);
             for(int kk=0; kk<4; kk++)
             {
-                
-                solver->res[kk] += solver->R[kk][ii][jj]*omega;
-                
+                if(solver->res[kk] < fabs(solver->R[kk][ii][jj]))
+                {
+                    solver->res[kk] = fabs(solver->R[kk][ii][jj]);
+                }
             }
         }
     }
     
     for(int kk=0; kk<4; kk++)
     {
-        //solver->res[kk] /= solver->res0[kk];
         printf(" %+.4e,", solver->res[kk]);        
     }
     printf("\n");    
@@ -1115,7 +1084,7 @@ int main(int argc, char **argv)
     s[0] = '\0';
     strcat(s, argv[1]);
     strcat(s, "input.dat");
-    INPUT* input = inputInit(s);
+    INPUT* input = inputInit(s, 50);
     printf("Input data:\n");
     inputPrint(input);
    
@@ -1141,15 +1110,6 @@ int main(int argc, char **argv)
     solver->bc->right = inputGetValue(input, "BCright");
 
     boundarySet(solver->bc);
-
-    solver->inlet = conditionInit(strtod(inputGetValue(input, "pressure"), NULL), 
-                                  strtod(inputGetValue(input, "temperature"), NULL), 
-                                  strtod(inputGetValue(input, "mach"), NULL), 
-                                  strtod(inputGetValue(input, "nx"), NULL),
-                                  strtod(inputGetValue(input, "ny"), NULL));
-    
-    //Domain initial condition                               
-    solver->inside = solver->inlet;   
   
     // Constants
     solver->Rgas = 287.5;
@@ -1160,47 +1120,105 @@ int main(int argc, char **argv)
     // Seletion of MUSCL and flux
     solver->MUSCL = atoi(inputGetValue(input, "MUSCL"));
     solver->flux=fluxChoice(inputGetValue(input, "flux"));
-
-    // Initialization of U
-    solverInitU(solver);
-    
-    // Calculate time step
-    
     solver->stages = atoi(inputGetValue(input, "stages"));
-    solver->dtFix = 0;
 
-    double CFL = strtod(inputGetValue(input, "CFL"), NULL);        
-    double delta = meshDeltaMin(solver->mesh);
-    double Vref = conditionVref(solver->inlet, solver);    
-    solver->dt = 0.5*solver->stages*CFL*delta/Vref;    
-
-    // Run the solver
-    int Nmax = atoi(inputGetValue(input, "Nmax")); 
-    printf("\nRunning solution:\n");
-    gettimeofday(&start, NULL);
-    for(int ii=0; ii<Nmax; ii++)
+    if(atoi(inputGetValue(input, "tube")) == 0)
     {
+
+        //stead state
+        solver->inlet = conditionInit(strtod(inputGetValue(input, "pressure"), NULL), 
+                                      strtod(inputGetValue(input, "temperature"), NULL), 
+                                      strtod(inputGetValue(input, "mach"), NULL), 
+                                      strtod(inputGetValue(input, "nx"), NULL),
+                                      strtod(inputGetValue(input, "ny"), NULL));
         
-        solverStepRK(solver);
+        // Initialization of U
+        solverInitU(solver, solver->inlet);
         
-        if(ii%100 == 0)
+        // Calculate time step        
+        int Nmax = atoi(inputGetValue(input, "Nmax"));
+
+        // Run the solver
+        printf("\nRunning solution:\n");
+        gettimeofday(&start, NULL);
+        for(int ii=0; ii<Nmax; ii++)
         {
-            printf("%i, ", ii);
-            solverCalcRes(solver);
+            solver->dt = solverCalcDt(solver);
+            solverStepRK(solver);
+            
+            if(ii%100 == 0)
+            {
+                printf("%i, ", ii);
+                solverCalcRes(solver);
+            }
+            
         }
-        
+        gettimeofday(&stop, NULL);  
+        printf("Duration %f s\n", duration(start, stop));
+ 
     }
-    gettimeofday(&stop, NULL);  
-    printf("Duration %f s\n", duration(start, stop));
-  
+    else
+    {
+    
+        CONDITION* inside1 = conditionInit(strtod(inputGetValue(input, "pressure1"), NULL), 
+                                           strtod(inputGetValue(input, "temperature1"), NULL), 
+                                           strtod(inputGetValue(input, "mach1"), NULL), 
+                                           strtod(inputGetValue(input, "nx1"), NULL),
+                                           strtod(inputGetValue(input, "ny1"), NULL));
+
+        CONDITION* inside2 = conditionInit(strtod(inputGetValue(input, "pressure2"), NULL), 
+                                           strtod(inputGetValue(input, "temperature2"), NULL), 
+                                           strtod(inputGetValue(input, "mach2"), NULL), 
+                                           strtod(inputGetValue(input, "nx2"), NULL),
+                                           strtod(inputGetValue(input, "ny2"), NULL));      
+    
+        // Initialization of U
+        solverInitUTube(solver, inside1, inside2, strtod(inputGetValue(input, "xm"), NULL));
+        free(inside1);
+        free(inside2);
+        
+        double tmax = strtod(inputGetValue(input, "tmax"), NULL);                
+
+        // Run the solver
+        double t = 0.0;
+        printf("\nRunning solution:\n");
+        gettimeofday(&start, NULL);
+        int stopLoop = 0;
+        int ii = 0;
+        while(stopLoop == 0)
+        {
+            
+            solver->dt = solverCalcDt(solver);
+            
+            if(t + solver->dt>tmax)
+            {
+                solver->dt = (tmax-t);
+                stopLoop = 1;
+            }
+
+            solverStepRK(solver);
+            t += solver->dt;
+            ii++;
+
+            if(ii%100 == 0)
+            {
+                printf("%i, ", ii);
+                solverCalcRes(solver);
+            }
+
+        }
+        gettimeofday(&stop, NULL);  
+        printf("Duration %f s\n", duration(start, stop));
+        printf("time %f s\n", t);
+
+    }
+
     // Save solution
     s[0] = '\0';
     strcat(s, argv[1]);
     strcat(s, "solution.csv");
     solverWriteU(solver, s);
-       
-	//solverPrintTimeStep(solver);
-    
+
     // Free memory 
     solverFree(solver);
     inputFree(input);

@@ -49,54 +49,24 @@ class basic():
 
 
 
-class channel(basic):
+class tube(basic):
 
-    def __init__(self, x0, x1, y0, n0, n1, n2, a):
+    def __init__(self, x0, y0, n0, n1):
     
-        self.a = a
-    
-        self.x0 = x0
-        self.x1 = x1
-        self.y0 = y0
                 
-        self.x = numpy.zeros((2*n0+n1, n2))
-        self.y = numpy.zeros((2*n0+n1, n2))
+        self.x = numpy.zeros((n0, n1))
+        self.y = numpy.zeros((n0, n1))
         
-        dx = self.x0/n0
-        dy = y0/(n2-1)
+        dx = x0/(n0-1)
+        dy = y0/(n1-1)
         for ii in range(0, n0):
-            for jj in range(0, n2):                    
+            for jj in range(0, n1):
                 self.x[ii, jj] = dx*ii
                 self.y[ii, jj] = dy*jj
-            
-        dx = self.x1/n1
-        for ii in range(0, n1):
-            xaux = dx*ii
-            yaux = self.func(xaux)
-            dy = (y0 - yaux)/(n2-1)
-            for jj in range(0, n2):                    
-                self.x[ii + n0, jj] = x0 + xaux
-                self.y[ii + n0, jj] = yaux + dy*jj
-
-        dx = self.x0/(n0-1)
-        dy = y0/(n2-1)
-        for ii in range(0, n0):
-            for jj in range(0, n2):                    
-                self.x[ii + n0 + n1, jj] = dx*ii + x0 + x1
-                self.y[ii + n0 + n1, jj] = dy*jj
-                
-    def func(self, x):
-    
-        b = self.x1/2
-        x = x - b
-        y = numpy.sqrt(self.a**2 + b**2 - x**2) - self.a 
-                
-        return y        
-
-             
+                             
 if __name__=='__main__':
 
-    w = channel(1, 1, 1, 40, 40, 40, 2)       
+    w = tube(50, 5, 100, 10)       
     w.plot()        
     w.write()
     

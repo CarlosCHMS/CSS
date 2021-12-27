@@ -83,4 +83,35 @@ void meshPrintOmega(MESH* mesh)
 
 }
 
+void meshCalcDSI(MESH* mesh, int ii, int jj, double* dSx, double* dSy)
+{
+
+    double dSx0 = (mesh->y[ii][jj+1] - mesh->y[ii][jj]);
+    double dSy0 = -(mesh->x[ii][jj+1] - mesh->x[ii][jj]);
+	
+	ii += 1;
+    double dSx1 = (mesh->y[ii][jj+1] - mesh->y[ii][jj]);
+    double dSy1 = -(mesh->x[ii][jj+1] - mesh->x[ii][jj]);
+
+	*dSx = (dSx0 + dSx1)/2.;
+	*dSy = (dSy0 + dSy1)/2.;
+
+}
+
+void meshCalcDSJ(MESH* mesh, int ii, int jj, double* dSx, double* dSy)
+{
+
+    double dSx0 = -(mesh->y[ii+1][jj] - mesh->y[ii][jj]);
+    double dSy0 = (mesh->x[ii+1][jj] - mesh->x[ii][jj]);
+	
+	jj += 1;
+    double dSx1 = -(mesh->y[ii+1][jj] - mesh->y[ii][jj]);
+    double dSy1 = (mesh->x[ii+1][jj] - mesh->x[ii][jj]);
+
+	*dSx = (dSx0 + dSx1)/2.;
+	*dSy = (dSy0 + dSy1)/2.;
+
+}
+
+
 

@@ -54,7 +54,7 @@ class solution():
         
         return None        
 
-def levels(v, n):    
+def levelsCalc(v, n):    
 
     max1 = v[0][0]
     min1 = v[0][0]
@@ -116,7 +116,7 @@ if __name__=="__main__":
     
     plt.figure()
     plt.title("rv")
-    plt.contourf(s.x, s.y, s.rv, levels=levels(s.rv, 10))
+    plt.contourf(s.x, s.y, s.rv, levels=levelsCalc(s.rv, 10))
     plt.axis("equal")
     plt.colorbar()    
     plt.show()    
@@ -127,25 +127,5 @@ if __name__=="__main__":
     plt.axis("equal")
     plt.colorbar()    
     plt.show()    
-        
-    plt.figure()
-    plt.title("mach")
-    plt.plot(s.y[70, :], s.mach[70, :], '.-')
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 2.0)    
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 1.64052221)
-    plt.show()    
-        
-    plt.figure()
-    plt.title("pressure")
-    plt.plot(s.y[70, :], s.p[70, :], '.-')
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 1e5)    
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 1e5*1.70657860)
 
-    plt.show()    
-        
-    plt.figure()
-    plt.title("rv")
-    plt.plot(s.y[70, :], s.rv[70, :])
-    plt.show()    
-    
         

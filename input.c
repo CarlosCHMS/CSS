@@ -4,7 +4,7 @@
 #include"input.h"
 
 
-INPUT* inputInit(char* fileName)
+INPUT* inputInit(char* fileName, int N)
 {
 
     INPUT* input = malloc(sizeof(INPUT));
@@ -12,9 +12,9 @@ INPUT* inputInit(char* fileName)
     char c;
     int name, value;
     int ii, jj;
-    char s[50];
+    char s[N];
     
-    int N = 50;
+    input->Nmax = N;
     
     input->name = (char**)malloc(N*sizeof(char*));    
     for(ii=0; ii<N; ii++)
@@ -135,7 +135,7 @@ char* inputGetValue(INPUT* input, char* name)
 void inputFree(INPUT* input)
 {
     
-    for(int ii=0; ii<50; ii++)
+    for(int ii=0; ii<input->Nmax; ii++)
     {
         free(input->name[ii]);
         free(input->value[ii]);

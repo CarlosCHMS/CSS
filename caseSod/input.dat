@@ -1,0 +1,26 @@
+
+pressure1, 1e5
+mach1, 0.
+temperature1, 300.
+nx1, 1.
+ny1, 0.
+
+pressure2, 1e4
+mach2, 0.
+temperature2, 240.
+nx2, 1.
+ny2, 0.
+
+BCdown, wall
+BCup, wall
+BCleft, wall
+BCright, wall
+
+xm, 25.
+tmax, 0.02
+interpE, 0.01
+MUSCL, 1
+stages, 5
+threads, 4
+flux, ROE 
+tube, 1
