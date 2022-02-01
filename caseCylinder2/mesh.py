@@ -46,8 +46,6 @@ class basic():
             ff.write('\n')
             
         ff.close()    
-
-
         
 class cylinder(basic):
 
@@ -56,21 +54,24 @@ class cylinder(basic):
         self.x = numpy.zeros((n0, n1))
         self.y = numpy.zeros((n0, n1))
         
-        dt = (numpy.pi)/(n0-1)
-        q = (r1/r0)**(1/(n1-1))
+        t0 = -numpy.pi/2
+        
+        dt = numpy.pi/(n0-1)
+
         for ii in range(0, n0):
-            t = ii*dt - numpy.pi/2
+            t = ii*dt + t0
+            rr = r1/(numpy.cos(t/2)**2)
+            q = (rr/r0)**(1/(n1-1))
             for jj in range(0, n1):
                 r = r0*(q**jj)                    
                 self.x[ii, jj] = -r*numpy.cos(t)
                 self.y[ii, jj] = r*numpy.sin(t)
                             
             
-       
                  
 if __name__=='__main__':
 
-    w = cylinder(0.5, 2.5, 160, 100) 
+    w = cylinder(0.5, 1., 180, 45) 
     w.plot()        
     w.write()
     

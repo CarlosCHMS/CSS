@@ -10,9 +10,9 @@ BCup, inlet
 BCleft, outlet
 BCright, outlet
 
-Nmax, 3000
-interpE, 0.01
-MUSCL, 0
+Nmax, 10000
+interpE, 0.00001
+MUSCL, 1
 stages, 5
 threads, 3
 flux, AUSMD
