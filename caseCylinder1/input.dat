@@ -10,8 +10,8 @@ BCup, inlet
 BCleft, wallp
 BCright, outlet
 
-Nmax, 2000
-interpE, 0.01
+Nmax, 10000
+interpE, 0.0001
 MUSCL, 1
 stages, 5
 threads, 3

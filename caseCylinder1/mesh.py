@@ -57,9 +57,11 @@ class cylinder(basic):
         t0 = 0
         
         dt = (numpy.pi/2 - 0)/(n0-1)
-        q = (r1/r0)**(1/(n1-1))
+
         for ii in range(0, n0):
-            t = ii*dt + t0            
+            t = ii*dt + t0
+            rr = r1/(numpy.cos(t/2)**2)
+            q = (rr/r0)**(1/(n1-1))
             for jj in range(0, n1):
                 r = r0*(q**jj)                    
                 self.x[ii, jj] = -r*numpy.cos(t)
@@ -69,7 +71,7 @@ class cylinder(basic):
                  
 if __name__=='__main__':
 
-    w = cylinder(0.5, 2.5, 80, 100) 
+    w = cylinder(0.5, 1., 90, 45) 
     w.plot()        
     w.write()
     
