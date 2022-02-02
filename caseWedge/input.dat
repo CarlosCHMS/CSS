@@ -5,13 +5,13 @@ temperature, 300.
 nx, 1.
 ny, 0.
 
-BCdown, wallp
-BCup, wallp
+BCdown, wall
+BCup, wall
 BCleft, inlet
 BCright, outlet
 
-Nmax, 3000
-interpE, 0.01
+Nmax, 5000
+interpE, 1e-10
 MUSCL, 1
 stages, 5
 threads, 4

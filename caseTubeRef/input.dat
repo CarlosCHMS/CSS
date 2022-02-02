@@ -18,7 +18,7 @@ BCright, wall
 
 xm, 25.
 tmax, 0.020
-interpE, 0.01
+interpE, 0.0001
 MUSCL, 1
 stages, 5
 threads, 4

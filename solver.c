@@ -492,8 +492,8 @@ void interpMUSCL_iiL1(double **U, int ii, int jj, double *UL, double e)
     double a = U[ii+1][jj] - U[ii][jj];
     double b = U[ii][jj] - U[ii-1][jj];
 
-    //double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
-    double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
+    double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
+    //double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
     
     *UL = U[ii][jj] + 0.5*delta;
 
@@ -505,8 +505,8 @@ void interpMUSCL_iiR1(double **U, int ii1, int jj, double *UR, double e)
     double a = U[ii1+1][jj] - U[ii1][jj];
     double b = U[ii1][jj] - U[ii1-1][jj];
 
-    //double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
-    double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
+    double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
+    //double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
     
     *UR = U[ii1][jj] - 0.5*delta;
 
@@ -518,8 +518,8 @@ void interpMUSCL_jjL1(double **U, int ii, int jj, double *UL, double e)
     double a = U[ii][jj+1] - U[ii][jj];
     double b = U[ii][jj] - U[ii][jj-1];
 
-    //double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
-    double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
+    double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
+    //double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
     
     *UL = U[ii][jj] + 0.5*delta;
 
@@ -531,8 +531,8 @@ void interpMUSCL_jjR1(double **U, int ii, int jj1, double *UR, double e)
     double a = U[ii][jj1+1] - U[ii][jj1];
     double b = U[ii][jj1] - U[ii][jj1-1];
 
-    //double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
-    double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
+    double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
+    //double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
     
     *UR = U[ii][jj1] - 0.5*delta;
 
@@ -558,7 +558,7 @@ void inter(SOLVER* solver, double ***U)
         for(int ii=0; ii<solver->Nrow-1; ii++)
         {
      
-            e = sqrt(meshCalcOmega(solver->mesh, ii, jj))*solver->e;
+            e = solver->e;
      
             dSx = solver->mesh->y[ii+1][jj+1] - solver->mesh->y[ii+1][jj];
             dSy = -(solver->mesh->x[ii+1][jj+1] - solver->mesh->x[ii+1][jj]);
@@ -650,7 +650,7 @@ void inter(SOLVER* solver, double ***U)
         for(int jj=0; jj<solver->Ncol-1; jj++)
         {
 
-            e = sqrt(meshCalcOmega(solver->mesh, ii, jj))*solver->e;
+            e = solver->e;
      
             dSx = -(solver->mesh->y[ii+1][jj+1] - solver->mesh->y[ii][jj+1]);
             dSy = solver->mesh->x[ii+1][jj+1] - solver->mesh->x[ii][jj+1];
@@ -1099,6 +1099,8 @@ int main(int argc, char **argv)
     solver->Nrow = solver->mesh->Nrow-1;
     solver->Ncol = solver->mesh->Ncol-1;        
 
+	//meshPrintOmega(solver->mesh);
+
     // Memory allocation
     solverAllocate(solver);
  
@@ -1119,7 +1121,7 @@ int main(int argc, char **argv)
     
     // Seletion of MUSCL and flux
     solver->MUSCL = atoi(inputGetValue(input, "MUSCL"));
-    solver->flux=fluxChoice(inputGetValue(input, "flux"));
+    solver->flux = fluxChoice(inputGetValue(input, "flux"));
     solver->stages = atoi(inputGetValue(input, "stages"));
 
     if(atoi(inputGetValue(input, "tube")) == 0)
@@ -1224,5 +1226,6 @@ int main(int argc, char **argv)
     inputFree(input);
 
     return 0;
+
 
 }
