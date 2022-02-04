@@ -285,17 +285,10 @@ void solverFree(SOLVER* solver)
 double solverCalcP(SOLVER* solver, double*** U, int ii, int jj)
 {
 
-    double p;
-    double u = U[1][ii][jj]/U[0][ii][jj];
-    double v = U[2][ii][jj]/U[0][ii][jj];
-    double E = U[3][ii][jj]/U[0][ii][jj];
-    double aux;
+	double u = U[1][ii][jj]/U[0][ii][jj];
+	double v = U[2][ii][jj]/U[0][ii][jj];
     
-    aux = E - (u*u + v*v)/2;
-    aux *= solver->gamma - 1;
-    p = aux*solver->U[0][ii][jj];  
-    
-    return p;  
+	return (solver->gamma - 1)*(U[3][ii][jj] - 0.5*(u*u + v*v)*U[0][ii][jj]);
     
 }
 
@@ -481,8 +474,16 @@ void solverFlux(SOLVER* solver,
     }
 }
 
+void rotation(double* U, double dSx, double dSy, double dS)
+{
 
-void interpMUSCL_iiL1(double **U, int ii, int jj, double *UL, double e)
+    double aux = (U[1]*dSx + U[2]*dSy)/dS;
+    U[2] = (-U[1]*dSy + U[2]*dSx)/dS;
+    U[1] = aux;
+	
+}
+
+double interpMUSCL_ii(double **U, int ii, int jj, double e)
 {
 
     /*
@@ -495,25 +496,16 @@ void interpMUSCL_iiL1(double **U, int ii, int jj, double *UL, double e)
     double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
     //double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
     
-    *UL = U[ii][jj] + 0.5*delta;
+    return delta;
 
 }
 
-void interpMUSCL_iiR1(double **U, int ii1, int jj, double *UR, double e)
+double interpMUSCL_jj(double **U, int ii, int jj, double e)
 {
 
-    double a = U[ii1+1][jj] - U[ii1][jj];
-    double b = U[ii1][jj] - U[ii1-1][jj];
-
-    double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
-    //double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
-    
-    *UR = U[ii1][jj] - 0.5*delta;
-
-}
-
-void interpMUSCL_jjL1(double **U, int ii, int jj, double *UL, double e)
-{
+    /*
+    Based on: Blazek J., Computacional Fluid Dynamics, Principles and Applications (2001)
+    */
 
     double a = U[ii][jj+1] - U[ii][jj];
     double b = U[ii][jj] - U[ii][jj-1];
@@ -521,23 +513,9 @@ void interpMUSCL_jjL1(double **U, int ii, int jj, double *UL, double e)
     double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
     //double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
     
-    *UL = U[ii][jj] + 0.5*delta;
+    return delta;
 
 }
-
-void interpMUSCL_jjR1(double **U, int ii, int jj1, double *UR, double e)
-{
-
-    double a = U[ii][jj1+1] - U[ii][jj1];
-    double b = U[ii][jj1] - U[ii][jj1-1];
-
-    double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
-    //double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
-    
-    *UR = U[ii][jj1] - 0.5*delta;
-
-}
-
 
 void inter(SOLVER* solver, double ***U)
 {
@@ -548,90 +526,71 @@ void inter(SOLVER* solver, double ***U)
     for(int jj=0; jj<solver->Ncol; jj++)
     {
     
-        double dSx, dSy;
-        double dS;
+		int kk;
+        double dSx, dSy, dS;
         double aux;
-        double U0L, U1L, U2L, U3L, U0R, U1R, U2R, U3R;
+        double UL[4];
+		double UR[4];
         double f[4];
-        double e;
+        double delta;
 
         for(int ii=0; ii<solver->Nrow-1; ii++)
         {
      
-            e = solver->e;
-     
             dSx = solver->mesh->y[ii+1][jj+1] - solver->mesh->y[ii+1][jj];
             dSy = -(solver->mesh->x[ii+1][jj+1] - solver->mesh->x[ii+1][jj]);
-            dS = sqrt(dSx*dSx+ dSy*dSy);
+            dS = sqrt(dSx*dSx + dSy*dSy);
             
-            if(ii>0 & solver->MUSCL)
-            {
-                                              
-                interpMUSCL_iiL1(U[0], ii, jj, &U0L, e);
-                interpMUSCL_iiL1(U[1], ii, jj, &U1L, e);
-                interpMUSCL_iiL1(U[2], ii, jj, &U2L, e);
-                interpMUSCL_iiL1(U[3], ii, jj, &U3L, e);
+			if(ii>0 & solver->MUSCL)
+			{
+				for(kk=0; kk<4; kk++)
+				{
+					delta = interpMUSCL_ii(U[kk], ii, jj, solver->e);
+					UL[kk] = U[kk][ii][jj] + 0.5*delta;
+				}
+			}
+			else
+			{
+				for(kk=0; kk<4; kk++)
+				{
+					UL[kk] = U[kk][ii][jj];
+				}
+			}
 
-            }
-            else
-            {
-
-                U0L = U[0][ii][jj];
-                U1L = U[1][ii][jj];
-                U2L = U[2][ii][jj];
-                U3L = U[3][ii][jj];                                    
-
-
-            }
-
-
-            // boudary perpendicular to ii
-            if(ii<solver->Nrow-2 & solver->MUSCL)
-            {
-                                              
-                interpMUSCL_iiR1(U[0], ii+1, jj, &U0R, e);
-                interpMUSCL_iiR1(U[1], ii+1, jj, &U1R, e);
-                interpMUSCL_iiR1(U[2], ii+1, jj, &U2R, e);
-                interpMUSCL_iiR1(U[3], ii+1, jj, &U3R, e);
-
-            }
-            else
-            {
-
-                U0R = U[0][ii+1][jj];
-                U1R = U[1][ii+1][jj];
-                U2R = U[2][ii+1][jj];
-                U3R = U[3][ii+1][jj];                                    
-
-            }
+			if(ii<solver->Nrow-2 & solver->MUSCL)
+			{
+				for(kk=0; kk<4; kk++)
+				{
+					delta = interpMUSCL_ii(U[kk], ii+1, jj, solver->e);
+					UR[kk] = U[kk][ii+1][jj] - 0.5*delta;
+				}
+			}
+			else
+			{
+				for(kk=0; kk<4; kk++)
+				{
+					UR[kk] = U[kk][ii+1][jj];
+				}
+			}
 
             // Rotation of the velocity vectors
-            aux = (U1L*dSx + U2L*dSy)/dS;
-            U2L = (-U1L*dSy + U2L*dSx)/dS;
-            U1L = aux;
+			rotation(UL, dSx, dSy, dS);
                         
             // Rotation of the velocity vectors
-            aux = (U1R*dSx + U2R*dSy)/dS;
-            U2R = (-U1R*dSy + U2R*dSx)/dS;
-            U1R = aux;
+			rotation(UR, dSx, dSy, dS);
             
             // Flux calculation
-            solverFlux(solver, U0L, U1L, U2L, U3L, U0R, U1R, U2R, U3R, f);
+            solverFlux(solver, UL[0], UL[1], UL[2], UL[3], UR[0], UR[1], UR[2], UR[3], f);
 
             // Rotation of the flux
-            aux = (f[1]*dSx - f[2]*dSy)/dS;
-            f[2] =  (f[1]*dSy + f[2]*dSx)/dS;
-            f[1] = aux;  
+			rotation(f, dSx, -dSy, dS);
                              
-            for(int kk=0; kk<4; kk++)
+            for(kk=0; kk<4; kk++)
             {
-
                 aux = f[kk]*dS;
                 solver->R[kk][ii][jj] += aux;
                 solver->R[kk][ii+1][jj] -= aux;
-            
-            }             
-            
+            } 
         }        
     }
 
@@ -640,171 +599,172 @@ void inter(SOLVER* solver, double ***U)
     for(int ii=0; ii<solver->Nrow; ii++)
     {
     
-        double dSx, dSy;
-        double dS;
+		int kk;
+        double dSx, dSy, dS;
         double aux;
-        double U0L, U1L, U2L, U3L, U0R, U1R, U2R, U3R;
+        double UL[4];
+        double UR[4];
         double f[4];
-        double e;
+        double delta;
         
         for(int jj=0; jj<solver->Ncol-1; jj++)
         {
-
-            e = solver->e;
      
             dSx = -(solver->mesh->y[ii+1][jj+1] - solver->mesh->y[ii][jj+1]);
             dSy = solver->mesh->x[ii+1][jj+1] - solver->mesh->x[ii][jj+1];
-            dS = sqrt(dSx*dSx+ dSy*dSy);
+            dS = sqrt(dSx*dSx + dSy*dSy);
                                       
-            if(jj>0 & solver->MUSCL)
-            {
-                                              
-                interpMUSCL_jjL1(U[0], ii, jj, &U0L, e);
-                interpMUSCL_jjL1(U[1], ii, jj, &U1L, e);
-                interpMUSCL_jjL1(U[2], ii, jj, &U2L, e);
-                interpMUSCL_jjL1(U[3], ii, jj, &U3L, e);
-                
-            }
-            else
-            {
+			if(jj>0 & solver->MUSCL)
+			{
+				for(kk=0; kk<4; kk++)
+				{
+					delta = interpMUSCL_jj(U[kk], ii, jj, solver->e);
+					UL[kk] = U[kk][ii][jj] + 0.5*delta;
+				}
+			}
+			else
+			{
+				for(kk=0; kk<4; kk++)
+				{
+					UL[kk] = U[kk][ii][jj];
+				}
+			}
 
-                U0L = U[0][ii][jj];
-                U1L = U[1][ii][jj];
-                U2L = U[2][ii][jj];
-                U3L = U[3][ii][jj];
-
-            }
-
-            // boudary perpendicular to jj
-            if(jj<solver->Ncol-2 & solver->MUSCL)
-            {
-                                              
-                interpMUSCL_jjR1(U[0], ii, jj+1, &U0R, e);
-                interpMUSCL_jjR1(U[1], ii, jj+1, &U1R, e);
-                interpMUSCL_jjR1(U[2], ii, jj+1, &U2R, e);
-                interpMUSCL_jjR1(U[3], ii, jj+1, &U3R, e);
-
-            }
-            else
-            {
-
-                U0R = U[0][ii][jj+1];
-                U1R = U[1][ii][jj+1];
-                U2R = U[2][ii][jj+1];
-                U3R = U[3][ii][jj+1];                                    
-
-            }
+			if(jj<solver->Ncol-2 & solver->MUSCL)
+			{
+				for(kk=0; kk<4; kk++)
+				{
+					delta = interpMUSCL_jj(U[kk], ii, jj+1, solver->e);
+					UR[kk] = U[kk][ii][jj+1] - 0.5*delta;
+				}
+			}
+			else
+			{
+				for(kk=0; kk<4; kk++)
+				{
+					UR[kk] = U[kk][ii][jj+1];
+				}
+			}
 
             // Rotation of the velocity vectors
-            aux = (U1L*dSx + U2L*dSy)/dS;
-            U2L = (-U1L*dSy + U2L*dSx)/dS;
-            U1L = aux;
-                
+			rotation(UL, dSx, dSy, dS);
+                        
             // Rotation of the velocity vectors
-            aux = (U1R*dSx + U2R*dSy)/dS;
-            U2R = (-U1R*dSy + U2R*dSx)/dS;
-            U1R = aux;
+			rotation(UR, dSx, dSy, dS);
             
             // Flux calculation
-            solverFlux(solver, U0L, U1L, U2L, U3L, U0R, U1R, U2R, U3R, f);
+            solverFlux(solver, UL[0], UL[1], UL[2], UL[3], UR[0], UR[1], UR[2], UR[3], f);
 
             // Rotation of the flux
-            aux = (f[1]*dSx - f[2]*dSy)/dS;
-            f[2] =  (f[1]*dSy + f[2]*dSx)/dS;
-            f[1] = aux;  
+			rotation(f, dSx, -dSy, dS);
                              
-            for(int kk=0; kk<4; kk++)
+            for(kk=0; kk<4; kk++)
             {
-
                 aux = f[kk]*dS;
                 solver->R[kk][ii][jj] += aux;
-                solver->R[kk][ii][jj+1] -= aux;
-                
+                solver->R[kk][ii][jj+1] -= aux;   
             }             
-
-        }            
+        } 
     }
-            
 }
 
-void boundaryCalc(SOLVER* solver, double*** U, int ii, int jj, double dSx, double dSy, int flag)
+void boundaryCalc(SOLVER* solver, double*** U, int ii, int jj, double dSx, double dSy, int flagBC, int flagWall)
 {
 
+	int kk;
     double dS;
-    double U0L, U1L, U2L, U3L, U0R, U1R, U2R, U3R;
-    double aux;
+    double UL[4];
+    double UR[4];
     double f[4];
-
 
     dS = sqrt(dSx*dSx + dSy*dSy);
 
-    U0L = U[0][ii][jj];
-    U1L = U[1][ii][jj];
-    U2L = U[2][ii][jj];
-    U3L = U[3][ii][jj];                                    
-
+	for(kk=0; kk<4; kk++)
+	{
+		UL[kk] = U[kk][ii][jj];
+	}
+	
     // Rotation of the velocity vectors
-    aux = (U1L*dSx + U2L*dSy)/dS;
-    U2L = (-U1L*dSy + U2L*dSx)/dS;
-    U1L = aux;
+    rotation(UL, dSx, dSy, dS);
 
-    if(flag == 0)
+    if(flagBC == 0)
     {
     
         // Reflexive
-        solverFlux(solver, U0L, U1L, U2L, U3L, U0L, -U1L, U2L, U3L, f);
+        solverFlux(solver, UL[0], UL[1], UL[2], UL[3], UL[0], -UL[1], UL[2], UL[3], f);
 
     }
-    else if(flag == 1)
+    else if(flagBC == 1)
     {
 
         // Inlet
-        U0R = solver->inlet->Uin[0];
-        U1R = solver->inlet->Uin[1];
-        U2R = solver->inlet->Uin[2];
-        U3R = solver->inlet->Uin[3];
+		for(kk=0; kk<4; kk++)
+		{
+			UR[kk] = solver->inlet->Uin[kk];
+		}
 
         // Rotation of the velocity vectors
-        aux = (U1R*dSx + U2R*dSy)/dS;
-        U2R = (-U1R*dSy + U2R*dSx)/dS;
-        U1R = aux;
+	    rotation(UR, dSx, dSy, dS);
 
-        solverFlux(solver, U0L, U1L, U2L, U3L, U0R, U1R, U2R, U3R, f);
+		solverFlux(solver, UL[0], UL[1], UL[2], UL[3], UR[0], UR[1], UR[2], UR[3], f);
     
     }
-    else if(flag == 2)
+    else if(flagBC == 2)
     {
     
         // Outlet
-        solverFluxFree(solver, U0L, U1L, U2L, U3L, f);
+        solverFluxFree(solver, UL[0], UL[1], UL[2], UL[3], f);
     
     }
-    else if(flag == 3)
+    else if(flagBC == 3)
     {
     
+        /*
+        Based on: Blazek J., Computacional Fluid Dynamics, Principles and Applications (2001)
+        */        
+
+		double p2 = solverCalcP(solver, U, ii, jj);
+		double p3, p4;
+		
+        if(flagWall == 0)
+        {
+	        p3 = solverCalcP(solver, U, ii, jj+1);
+	        p4 = solverCalcP(solver, U, ii, jj+2);
+        }
+        else if(flagWall == 1)
+        {
+	        p3 = solverCalcP(solver, U, ii, jj-1);
+	        p4 = solverCalcP(solver, U, ii, jj-2);
+        }
+        else if(flagWall == 2)
+        {
+	        p3 = solverCalcP(solver, U, ii+1, jj);
+	        p4 = solverCalcP(solver, U, ii+2, jj);
+        }
+        else if(flagWall == 3)
+        {
+	        p3 = solverCalcP(solver, U, ii-1, jj);
+	        p4 = solverCalcP(solver, U, ii-2, jj);
+        }
+	
         // Outlet
-        double p = solverCalcP(solver, U, ii, jj);
         f[0] = .0;
-        f[1] = p;
         f[2] = .0;
-        f[3] = .0;                        
-    
-    }
+        f[3] = .0;
 
+        //f[1] =  p2;
+        //f[1] =  0.5*(3*p2 - p3);
+        f[1] =  0.125*(15*p2 - 10*p3 + 3*p4);
+
+    }
 
     // Rotation reverse of the flux
-    aux = (f[1]*dSx - f[2]*dSy)/dS;
-    f[2] =  (f[1]*dSy + f[2]*dSx)/dS;
-    f[1] = aux;  
+    rotation(f, dSx, -dSy, dS); 
                      
     for(int kk=0; kk<4; kk++)
     {
-
         solver->R[kk][ii][jj] += f[kk]*dS;
-
-    }             
- 
-
+    }
 }
 
 void boundary(SOLVER* solver, double*** U)
@@ -813,6 +773,7 @@ void boundary(SOLVER* solver, double*** U)
     int ii;
     int jj;    
     double dSx, dSy;
+    
 
     for(ii=0; ii<solver->Nrow; ii++)
     {
@@ -822,14 +783,14 @@ void boundary(SOLVER* solver, double*** U)
         dSx = (solver->mesh->y[ii+1][jj] - solver->mesh->y[ii][jj]);
         dSy = -(solver->mesh->x[ii+1][jj] - solver->mesh->x[ii][jj]);
 
-        boundaryCalc(solver, U, ii, jj, dSx, dSy, solver->bc->Ndown);
+        boundaryCalc(solver, U, ii, jj, dSx, dSy, solver->bc->Ndown, 0);
         
         // Boundary up
         jj = solver->Ncol-1;
         dSx = -(solver->mesh->y[ii+1][jj+1] - solver->mesh->y[ii][jj+1]);
         dSy = solver->mesh->x[ii+1][jj+1] - solver->mesh->x[ii][jj+1];
 
-        boundaryCalc(solver, U, ii, jj, dSx, dSy, solver->bc->Nup);
+        boundaryCalc(solver, U, ii, jj, dSx, dSy, solver->bc->Nup, 1);
 
     }
 
@@ -841,14 +802,14 @@ void boundary(SOLVER* solver, double*** U)
         dSx = -(solver->mesh->y[ii][jj+1] - solver->mesh->y[ii][jj]);
         dSy = solver->mesh->x[ii][jj+1] - solver->mesh->x[ii][jj];
         
-        boundaryCalc(solver, U, ii, jj, dSx, dSy, solver->bc->Nleft);
+        boundaryCalc(solver, U, ii, jj, dSx, dSy, solver->bc->Nleft, 2);
 
         // Boundary right
         ii = solver->Nrow-1;
         dSx = solver->mesh->y[ii+1][jj+1] - solver->mesh->y[ii+1][jj];
         dSy = -(solver->mesh->x[ii+1][jj+1] - solver->mesh->x[ii+1][jj]);
 
-        boundaryCalc(solver, U, ii, jj, dSx, dSy, solver->bc->Nright);
+        boundaryCalc(solver, U, ii, jj, dSx, dSy, solver->bc->Nright, 3);
 
     }
 
@@ -887,7 +848,6 @@ double solverCalcDt(SOLVER* solver)
             calcSpectralRad(solver, solver->U, ii, jj, &LcI, &LcJ);
 
 			dt = 0.5*solver->stages*omega/(LcI + LcJ);
-
             
             if(ii==0 & jj==0)
             {
@@ -900,8 +860,6 @@ double solverCalcDt(SOLVER* solver)
                     dtMin = dt;
                 }
             }
-            
-
         }
     }
 
