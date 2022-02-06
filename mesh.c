@@ -54,7 +54,71 @@ double meshDeltaMin(MESH* mesh)
 
 }
 
-double meshCalcOmega(MESH* mesh, int ii, int jj)
+void meshCalcDSup(MESH* mesh, int ii, int jj, double* dSx, double* dSy)
+{
+
+    double y;
+    *dSx = -(mesh->y[ii+1][jj+1] - mesh->y[ii][jj+1]);
+    *dSy = mesh->x[ii+1][jj+1] - mesh->x[ii][jj+1];
+    
+    if(mesh->axi == 1)
+    {
+        y = (mesh->y[ii+1][jj+1] + mesh->y[ii][jj+1])*0.5;
+        *dSx *= y;
+        *dSy *= y;        
+    }
+
+}
+
+void meshCalcDSright(MESH* mesh, int ii, int jj, double* dSx, double* dSy)
+{
+
+    double y;
+    *dSx = mesh->y[ii+1][jj+1] - mesh->y[ii+1][jj];
+    *dSy = -(mesh->x[ii+1][jj+1] - mesh->x[ii+1][jj]);
+
+    if(mesh->axi == 1)
+    {
+        y = (mesh->y[ii+1][jj+1] + mesh->y[ii+1][jj])*0.5;
+        *dSx *= y;
+        *dSy *= y;        
+    }
+
+}
+
+void meshCalcDSdown(MESH* mesh, int ii, int jj, double* dSx, double* dSy)
+{
+
+    double y;
+    *dSx = (mesh->y[ii+1][jj] - mesh->y[ii][jj]);
+    *dSy = -(mesh->x[ii+1][jj] - mesh->x[ii][jj]);
+
+    if(mesh->axi == 1)
+    {
+        y = (mesh->y[ii+1][jj] + mesh->y[ii][jj])*0.5;
+        *dSx *= y;
+        *dSy *= y;        
+    }
+
+}
+
+void meshCalcDSleft(MESH* mesh, int ii, int jj, double* dSx, double* dSy)
+{
+
+    double y;
+    *dSx = -(mesh->y[ii][jj+1] - mesh->y[ii][jj]);
+    *dSy = mesh->x[ii][jj+1] - mesh->x[ii][jj];
+     
+    if(mesh->axi == 1)
+    {
+        y = (mesh->y[ii][jj+1] + mesh->y[ii][jj])*0.5;
+        *dSx *= y;
+        *dSy *= y;        
+    }   
+
+}
+
+double meshCalcDSlateral(MESH* mesh, int ii, int jj)
 {
 
     double xac, xbd, yac, ybd;
@@ -69,6 +133,67 @@ double meshCalcOmega(MESH* mesh, int ii, int jj)
 
 }
 
+void meshPrintDStotal(MESH* mesh)
+{
+
+    double dSx, dSy;
+    double dSxt, dSyt;
+
+    for(int ii=0; ii<mesh->Nrow-1; ii++)
+    {
+        for(int jj=0; jj<mesh->Ncol-1; jj++)
+        {
+            dSxt = 0.0;
+            dSyt = 0.0;
+
+            meshCalcDSup(mesh, ii, jj, &dSx, &dSy);
+            dSxt += dSx;
+            dSyt += dSy;
+
+            meshCalcDSdown(mesh, ii, jj, &dSx, &dSy);
+            dSxt += dSx;
+            dSyt += dSy;
+
+            meshCalcDSleft(mesh, ii, jj, &dSx, &dSy);
+            dSxt += dSx;
+            dSyt += dSy;
+        
+            meshCalcDSright(mesh, ii, jj, &dSx, &dSy);
+            dSxt += dSx;
+            dSyt += dSy;
+
+            if(mesh->axi==1)
+            {
+                dSyt -= meshCalcDSlateral(mesh, ii, jj);
+            }
+   
+            printf(" %.4e, %.4e,\n", dSxt, dSyt);
+        }
+    }
+}
+
+double meshCalcOmega(MESH* mesh, int ii, int jj)
+{
+
+    double xac, xbd, yac, ybd, ans;
+    
+    xac = mesh->x[ii][jj+1] - mesh->x[ii+1][jj];
+    yac = mesh->y[ii][jj+1] - mesh->y[ii+1][jj];    
+
+    xbd = mesh->x[ii][jj] - mesh->x[ii+1][jj+1];
+    ybd = mesh->y[ii][jj] - mesh->y[ii+1][jj+1];    
+
+    ans = 0.5*(xac*ybd - xbd*yac);
+
+    if(mesh->axi == 1)
+    {
+        ans *= (mesh->y[ii][jj+1] + mesh->y[ii+1][jj] + mesh->y[ii][jj] + mesh->y[ii+1][jj+1])*0.25;
+    }
+
+    return ans;
+
+}
+
 void meshPrintOmega(MESH* mesh)
 {
 
@@ -76,7 +201,7 @@ void meshPrintOmega(MESH* mesh)
     {
         for(int jj=0; jj<mesh->Ncol-1; jj++)
         {
-            printf(" %.4f,", meshCalcOmega(mesh, ii, jj));
+            printf(" %.4e,", meshCalcOmega(mesh, ii, jj));
         }
         printf("\n");
     }
@@ -86,30 +211,26 @@ void meshPrintOmega(MESH* mesh)
 void meshCalcDSI(MESH* mesh, int ii, int jj, double* dSx, double* dSy)
 {
 
-    double dSx0 = (mesh->y[ii][jj+1] - mesh->y[ii][jj]);
-    double dSy0 = -(mesh->x[ii][jj+1] - mesh->x[ii][jj]);
-	
-	ii += 1;
-    double dSx1 = (mesh->y[ii][jj+1] - mesh->y[ii][jj]);
-    double dSy1 = -(mesh->x[ii][jj+1] - mesh->x[ii][jj]);
+    double dSx0, dSy0, dSx1, dSy1;
 
-	*dSx = (dSx0 + dSx1)/2.;
-	*dSy = (dSy0 + dSy1)/2.;
+    meshCalcDSleft(mesh, ii, jj, &dSx0, &dSy0);
+    meshCalcDSright(mesh, ii, jj, &dSx1, &dSy1);
+
+	*dSx = (dSx1 - dSx0)/2.;
+	*dSy = (dSy1 - dSy0)/2.;
 
 }
 
 void meshCalcDSJ(MESH* mesh, int ii, int jj, double* dSx, double* dSy)
 {
 
-    double dSx0 = -(mesh->y[ii+1][jj] - mesh->y[ii][jj]);
-    double dSy0 = (mesh->x[ii+1][jj] - mesh->x[ii][jj]);
-	
-	jj += 1;
-    double dSx1 = -(mesh->y[ii+1][jj] - mesh->y[ii][jj]);
-    double dSy1 = (mesh->x[ii+1][jj] - mesh->x[ii][jj]);
+    double dSx0, dSy0, dSx1, dSy1;
 
-	*dSx = (dSx0 + dSx1)/2.;
-	*dSy = (dSy0 + dSy1)/2.;
+    meshCalcDSdown(mesh, ii, jj, &dSx0, &dSy0);
+    meshCalcDSup(mesh, ii, jj, &dSx1, &dSy1);
+
+	*dSx = (dSx1 - dSx0)/2.;
+	*dSy = (dSy1 - dSy0)/2.;
 
 }
 

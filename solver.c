@@ -537,8 +537,7 @@ void inter(SOLVER* solver, double ***U)
         for(int ii=0; ii<solver->Nrow-1; ii++)
         {
      
-            dSx = solver->mesh->y[ii+1][jj+1] - solver->mesh->y[ii+1][jj];
-            dSy = -(solver->mesh->x[ii+1][jj+1] - solver->mesh->x[ii+1][jj]);
+            meshCalcDSright(solver->mesh, ii, jj, &dSx, &dSy);
             dS = sqrt(dSx*dSx + dSy*dSy);
             
 			if(ii>0 & solver->MUSCL)
@@ -610,8 +609,7 @@ void inter(SOLVER* solver, double ***U)
         for(int jj=0; jj<solver->Ncol-1; jj++)
         {
      
-            dSx = -(solver->mesh->y[ii+1][jj+1] - solver->mesh->y[ii][jj+1]);
-            dSy = solver->mesh->x[ii+1][jj+1] - solver->mesh->x[ii][jj+1];
+            meshCalcDSup(solver->mesh, ii, jj, &dSx, &dSy);
             dS = sqrt(dSx*dSx + dSy*dSy);
                                       
 			if(jj>0 & solver->MUSCL)
@@ -779,17 +777,13 @@ void boundary(SOLVER* solver, double*** U)
     {
 
         // Boundary down
-        jj = 0;        
-        dSx = (solver->mesh->y[ii+1][jj] - solver->mesh->y[ii][jj]);
-        dSy = -(solver->mesh->x[ii+1][jj] - solver->mesh->x[ii][jj]);
-
+        jj = 0; 
+        meshCalcDSdown(solver->mesh, ii, jj, &dSx, &dSy);
         boundaryCalc(solver, U, ii, jj, dSx, dSy, solver->bc->Ndown, 0);
         
         // Boundary up
         jj = solver->Ncol-1;
-        dSx = -(solver->mesh->y[ii+1][jj+1] - solver->mesh->y[ii][jj+1]);
-        dSy = solver->mesh->x[ii+1][jj+1] - solver->mesh->x[ii][jj+1];
-
+        meshCalcDSup(solver->mesh, ii, jj, &dSx, &dSy);
         boundaryCalc(solver, U, ii, jj, dSx, dSy, solver->bc->Nup, 1);
 
     }
@@ -799,20 +793,33 @@ void boundary(SOLVER* solver, double*** U)
 
         // Boundary left
         ii = 0;
-        dSx = -(solver->mesh->y[ii][jj+1] - solver->mesh->y[ii][jj]);
-        dSy = solver->mesh->x[ii][jj+1] - solver->mesh->x[ii][jj];
-        
+        meshCalcDSleft(solver->mesh, ii, jj, &dSx, &dSy);
         boundaryCalc(solver, U, ii, jj, dSx, dSy, solver->bc->Nleft, 2);
 
         // Boundary right
         ii = solver->Nrow-1;
-        dSx = solver->mesh->y[ii+1][jj+1] - solver->mesh->y[ii+1][jj];
-        dSy = -(solver->mesh->x[ii+1][jj+1] - solver->mesh->x[ii+1][jj]);
-
+        meshCalcDSright(solver->mesh, ii, jj, &dSx, &dSy);
         boundaryCalc(solver, U, ii, jj, dSx, dSy, solver->bc->Nright, 3);
 
     }
 
+}
+
+void interAxisPressure(SOLVER* solver, double ***U)
+{
+
+    double dS;
+
+    for(int ii=0; ii<solver->Nrow; ii++)
+    {        
+        for(int jj=0; jj<solver->Ncol; jj++)
+        {
+
+            dS = meshCalcDSlateral(solver->mesh, ii, jj);
+            solver->R[2][ii][jj] -= solverCalcP(solver, U, ii, jj)*dS;
+
+        } 
+    }
 }
 
 void calcSpectralRad(SOLVER* solver, double*** U, int ii, int jj, double* LcI, double* LcJ)
@@ -875,6 +882,11 @@ void solverCalcR(SOLVER* solver, double*** U)
     inter(solver, U);
     
     boundary(solver, U);  
+    
+    if(solver->mesh->axi==1)
+    {
+        interAxisPressure(solver, U);
+    }
 
 }
 
@@ -1057,7 +1069,11 @@ int main(int argc, char **argv)
     solver->Nrow = solver->mesh->Nrow-1;
     solver->Ncol = solver->mesh->Ncol-1;        
 
+    // axisymmetric
+    solver->mesh->axi = atoi(inputGetValue(input, "axisymmetric"));
+
 	//meshPrintOmega(solver->mesh);
+    //meshPrintDStotal(solver->mesh);
 
     // Memory allocation
     solverAllocate(solver);
