@@ -17,3 +17,4 @@ stages, 5
 threads, 3
 flux, AUSMD
 tube, 0
+axisymmetric, 0

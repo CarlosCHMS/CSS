@@ -24,3 +24,4 @@ stages, 5
 threads, 4
 flux, ROE 
 tube, 1
+axisymmetric, 0

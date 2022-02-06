@@ -1,20 +1,20 @@
 
 pressure, 1e5
-mach, .5
+mach, 2
 temperature, 300.
 nx, 1.
 ny, 0.
 
-BCdown, wall
-BCup, wall
+BCdown, wallp
+BCup, wallp
 BCleft, inlet
 BCright, outlet
 
-Nmax, 10000
-interpE, 1e-5
-MUSCL, 0
+Nmax, 3000
+interpE, 1e-10
+MUSCL, 1
 stages, 5
 threads, 4
-flux, AUSMD 
+flux, AUSMD
 tube, 0
-axisymmetric, 0
+axisymmetric, 1
