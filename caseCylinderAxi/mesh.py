@@ -33,7 +33,7 @@ class basic():
         for ii in range(0, self.x.shape[0]):
             for jj in range(0, self.x.shape[1]):        
             
-                ff.write('%.4f,' % self.x[ii, jj])
+                ff.write('%.10e,' % self.x[ii, jj])
                 
             ff.write('\n')
             
@@ -41,7 +41,7 @@ class basic():
         for ii in range(0, self.y.shape[0]):
             for jj in range(0, self.y.shape[1]):        
             
-                ff.write('%.4f,' % self.y[ii, jj])
+                ff.write('%.10e,' % self.y[ii, jj])
                 
             ff.write('\n')
             
@@ -66,8 +66,6 @@ class cylinder(basic):
                 r = r0*(q**jj)                    
                 self.x[ii, jj] = -r*numpy.cos(t)
                 self.y[ii, jj] = r*numpy.sin(t)
-                            
-        self.y += 0.001
         
                  
 if __name__=='__main__':

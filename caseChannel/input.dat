@@ -5,8 +5,8 @@ temperature, 300.
 nx, 1.
 ny, 0.
 
-BCdown, wall
-BCup, wall
+BCdown, wallp
+BCup, wallp
 BCleft, inlet
 BCright, outlet
 

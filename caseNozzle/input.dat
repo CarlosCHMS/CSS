@@ -12,7 +12,7 @@ BCright, outlet
 
 Nmax, 4000
 interpE, 1e-10
-MUSCL, 0
+MUSCL, 1
 stages, 5
 threads, 4
 flux, ROE

@@ -51,10 +51,14 @@ class solution():
         self.mach = V/c
         self.u = u        
         self.v = v
+
+        self.entro = self.p/(self.r**self.gamma)
+
+        self.H = E + self.p/self.r
         
         return None        
 
-def levelsCalc(v, n):    
+def levels(v, n):    
 
     max1 = v[0][0]
     min1 = v[0][0]
@@ -116,7 +120,7 @@ if __name__=="__main__":
     
     plt.figure()
     plt.title("rv")
-    plt.contourf(s.x, s.y, s.rv, levels=levelsCalc(s.rv, 10))
+    plt.contourf(s.x, s.y, s.rv, levels=levels(s.rv, 10))
     plt.axis("equal")
     plt.colorbar()    
     plt.show()    
@@ -126,6 +130,19 @@ if __name__=="__main__":
     plt.contourf(s.x, s.y, s.rE)
     plt.axis("equal")
     plt.colorbar()    
-    plt.show()    
+    plt.show() 
 
-        
+    plt.figure()
+    plt.title("entropia")
+    plt.contourf(s.x, s.y, s.entro)
+    plt.axis("equal")
+    plt.colorbar()    
+    plt.show()
+
+    plt.figure()
+    plt.title("entalpia")
+    plt.contourf(s.x, s.y, s.H)
+    plt.axis("equal")
+    plt.colorbar()    
+    plt.show()
+

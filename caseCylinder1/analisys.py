@@ -49,9 +49,30 @@ class solution():
         V = numpy.sqrt(u**2 + v**2)
         
         self.mach = V/c
+        self.u = u        
+        self.v = v
+
+        self.entro = self.p/(self.r**self.gamma)
+
+        self.H = E + self.p/self.r
         
         return None        
-                
+
+def levels(v, n):    
+
+    max1 = v[0][0]
+    min1 = v[0][0]
+    for ii in range(0, v.shape[0]):
+        for jj in range(0, v.shape[1]):
+            max1 = max(v[ii][jj], max1)
+            min1 = min(v[ii][jj], min1)
+                            
+    d = (max1-min1)/(n-1)
+    levels = []
+    for ii in range(0, n):
+        levels.append(min1 + d*ii)
+    
+    return levels                
     
 if __name__=="__main__":
 
@@ -61,7 +82,7 @@ if __name__=="__main__":
     
     path = sys.argv[1]
         
-    s = solution(path+"mesh.csv", path+"solution.csv")        
+    s = solution(path+"mesh.csv", path+"./solution.csv")        
         
     s.calcPMT()
         
@@ -83,7 +104,6 @@ if __name__=="__main__":
     plt.colorbar()    
     plt.show()    
 
-    
     plt.figure()
     plt.title("r")
     plt.contourf(s.x, s.y, s.r)
@@ -100,7 +120,7 @@ if __name__=="__main__":
     
     plt.figure()
     plt.title("rv")
-    plt.contourf(s.x, s.y, s.rv)
+    plt.contourf(s.x, s.y, s.rv, levels=levels(s.rv, 10))
     plt.axis("equal")
     plt.colorbar()    
     plt.show()    
@@ -110,11 +130,19 @@ if __name__=="__main__":
     plt.contourf(s.x, s.y, s.rE)
     plt.axis("equal")
     plt.colorbar()    
-    plt.show()    
-        
+    plt.show() 
+
     plt.figure()
-    plt.title("rv")
-    plt.plot(s.y[-1, :], s.rv[-1, :])
-    plt.show()    
-        
-        
+    plt.title("entropia")
+    plt.contourf(s.x, s.y, s.entro)
+    plt.axis("equal")
+    plt.colorbar()    
+    plt.show()
+
+    plt.figure()
+    plt.title("entalpia")
+    plt.contourf(s.x, s.y, s.H)
+    plt.axis("equal")
+    plt.colorbar()    
+    plt.show()
+
