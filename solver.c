@@ -758,10 +758,13 @@ void boundaryCalc(SOLVER* solver, double*** U, int ii, int jj, double dSx, doubl
 
     // Rotation reverse of the flux
     rotation(f, dSx, -dSy, dS); 
-                     
-    for(int kk=0; kk<4; kk++)
-    {
-        solver->R[kk][ii][jj] += f[kk]*dS;
+    
+    if(dS>0.0)
+    {         
+        for(int kk=0; kk<4; kk++)
+        {
+            solver->R[kk][ii][jj] += f[kk]*dS;
+        }
     }
 }
 
