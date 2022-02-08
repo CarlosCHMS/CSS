@@ -76,11 +76,12 @@ class wedge(basic):
             for jj in range(0, n2):                    
                 self.x[ii + n0, jj] = x0 + xaux
                 self.y[ii + n0, jj] = yaux + dy*jj
-                       
+                   
+        self.x -= x0    
                  
 if __name__=='__main__':
 
-    w = wedge(0.1, 0.4, 0.5, 16, 64, 80, 10)
+    w = wedge(0.2, 0.8, 1.5, 10, 40, 75, 20)
     w.plot()        
     w.write()
     

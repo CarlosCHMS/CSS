@@ -4,6 +4,7 @@ import numpy
 import matplotlib.pyplot as plt
 from readTables import readTables
 import sys
+import readFluent as rf
  
 class solution():
 
@@ -145,46 +146,25 @@ if __name__=="__main__":
     plt.axis("equal")
     plt.colorbar()    
     plt.show()
-        
-    plt.figure()
-    plt.title("mach versus y")
-    plt.plot(s.y[70, :], s.mach[70, :], '.-')
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 2.0)    
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 1.64052221)
-    plt.show() 
+
+    m = rf.read(path+"machxX")
 
     plt.figure()
     plt.title("mach versus x")
     plt.plot(s.x[:, 0], s.mach[:, 0], '.-')
     plt.plot(s.x[:, 0], s.x[:, 0]*0 + 2.0)    
-    plt.plot(s.x[:, 0], s.x[:, 0]*0 + 1.64052221)
+    plt.plot(s.x[:, 0], s.x[:, 0]*0 + 1.21021838)
+    plt.plot(m.x, m.y)
     plt.show()   
-        
-    plt.figure()
-    plt.title("pressure versus y")
-    plt.plot(s.y[70, :], s.p[70, :], '.-')
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 1e5)    
-    plt.plot(s.y[70, :], s.y[70, :]*0 + 1e5*1.70657860)
+
+    p = rf.read(path+"pressurexX")
 
     plt.figure()
     plt.title("pressure versus x")
     plt.plot(s.x[:, 0], s.p[:, 0], '.-')
     plt.plot(s.x[:, 0], s.x[:, 0]*0 + 1e5)    
-    plt.plot(s.x[:, 0], s.x[:, 0]*0 + 1e5*1.70657860)
+    plt.plot(s.x[:, 0], s.x[:, 0]*0 + 2.84286270*1e5)
+    plt.plot(p.x, p.y)
     plt.show()
 
-    plt.show()    
-        
-    plt.figure()
-    plt.title("rv")
-    plt.plot(s.y[70, :], s.rv[70, :])
-    plt.show() 
 
-    plt.figure()
-    plt.title("u")
-    for n in range(1, 70):
-        plt.plot(s.y[n, :], s.u[n, :])
-
-    plt.show()    
-    
-        
