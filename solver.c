@@ -71,7 +71,7 @@ int boundaryChoice(char* s)
 {
     int ans;
 
-    if(strcmp(s, "wall") == 0)
+    if(strcmp(s, "symmetry") == 0)
     {
         ans = 0;
     }
@@ -83,7 +83,7 @@ int boundaryChoice(char* s)
     {
         ans = 2;
     }
-    else if(strcmp(s, "wallp") == 0)
+    else if(strcmp(s, "wall") == 0)
     {
         ans = 3;
     }
@@ -494,7 +494,6 @@ double interpMUSCL_ii(double **U, int ii, int jj, double e)
     double b = U[ii][jj] - U[ii-1][jj];
 
     double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
-    //double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
     
     return delta;
 
@@ -511,7 +510,6 @@ double interpMUSCL_jj(double **U, int ii, int jj, double e)
     double b = U[ii][jj] - U[ii][jj-1];
 
     double delta = (a*(b*b+e) + b*(a*a+e))/(a*a+b*b+2*e);
-    //double delta = ((2*a*a+e)*b + (b*b+2*e)*a)/(2*a*a+2*b*b-a*b+3*e);
     
     return delta;
 
@@ -1097,7 +1095,7 @@ int main(int argc, char **argv)
     solver->e = strtod(inputGetValue(input, "interpE"), NULL);
     
     // Seletion of MUSCL and flux
-    solver->MUSCL = atoi(inputGetValue(input, "MUSCL"));
+    solver->MUSCL = atoi(inputGetValue(input, "order")) - 1;
     solver->flux = fluxChoice(inputGetValue(input, "flux"));
     solver->stages = atoi(inputGetValue(input, "stages"));
 
