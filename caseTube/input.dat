@@ -19,7 +19,7 @@ BCright, wall
 xm, 25.
 tmax, 0.020
 interpE, 0.01
-MUSCL, 1
+order, 2
 stages, 5
 threads, 4
 flux, ROE

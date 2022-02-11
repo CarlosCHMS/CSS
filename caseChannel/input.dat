@@ -5,14 +5,14 @@ temperature, 300.
 nx, 1.
 ny, 0.
 
-BCdown, wallp
-BCup, wallp
+BCdown, wall
+BCup, symmetry
 BCleft, inlet
 BCright, outlet
 
 Nmax, 10000
 interpE, 1e-5
-MUSCL, 0
+order, 1
 stages, 5
 threads, 4
 flux, AUSMD 
