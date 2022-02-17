@@ -48,19 +48,15 @@ void boundarySet(BOUNDARY* bc)
 
 void boundaryInlet(SOLVER* solver, double* Ua, double* Ud, double* Ub, double nx, double ny)
 {
-
     double rd = Ud[0];
     double ud = Ud[1]/Ud[0];
     double vd = Ud[2]/Ud[0];
     double pd = (solver->gamma - 1)*(Ud[3] - 0.5*(ud*ud + vd*vd)*rd);
-
     double c0 = sqrt(solver->gamma*pd/rd);    
-
     double m = sqrt(ud*ud + vd*vd)/c0;
     
     if(m < 1.)
     {
-
         double ra = Ua[0];
         double ua = Ua[1]/Ua[0];
         double va = Ua[2]/Ua[0];
@@ -75,18 +71,14 @@ void boundaryInlet(SOLVER* solver, double* Ua, double* Ud, double* Ub, double nx
         Ub[1] = rb*ub;
         Ub[2] = rb*vb;
         Ub[3] = pb/(solver->gamma-1) + 0.5*(ub*ub + vb*vb)*rb;
-
     }
     else
     {
         for(int ii=0; ii<4; ii++)
         {
-        
             Ub[ii] = Ua[ii];
-
         }
     }    
-
 }
 
 void boundaryOutlet(SOLVER* solver, double* Ud, double* Ub, double nx, double ny)
@@ -96,9 +88,7 @@ void boundaryOutlet(SOLVER* solver, double* Ud, double* Ub, double nx, double ny
     double ud = Ud[1]/Ud[0];
     double vd = Ud[2]/Ud[0];
     double pd = (solver->gamma - 1)*(Ud[3] - 0.5*(ud*ud + vd*vd)*rd);
-
     double c0 = sqrt(solver->gamma*pd/rd);    
-
     double m = sqrt(ud*ud + vd*vd)/c0;
     
     if(m < 1.)
@@ -117,12 +107,9 @@ void boundaryOutlet(SOLVER* solver, double* Ud, double* Ub, double nx, double ny
     {
         for(int ii=0; ii<4; ii++)
         {
-        
             Ub[ii] = Ud[ii];
-
         }
     }    
-
 }
 
 
@@ -166,13 +153,19 @@ void boundaryCalc(SOLVER* solver, double*** U, int ii, int jj, double dSx, doubl
     else if(flagBC == 2)
     {
 
+        /*
         boundaryOutlet(solver, UL, Ub, dSx/dS, dSy/dS);
 
         // Rotation of the velocity vectors
 	    rotation(Ub, dSx, dSy, dS);
 
 		solverFluxFree(solver, Ub[0], Ub[1], Ub[2], Ub[3], f);
-    
+		*/
+		
+		rotation(UL, dSx, dSy, dS);
+
+		solverFluxFree(solver, UL[0], UL[1], UL[2], UL[3], f);
+		
     }
     else if(flagBC == 3)
     {
