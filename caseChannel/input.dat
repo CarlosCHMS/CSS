@@ -4,9 +4,10 @@ mach, .5
 temperature, 300.
 nx, 1.
 ny, 0.
+pout, 1e5
 
 BCdown, wall
-BCup, symmetry
+BCup, wall
 BCleft, inlet
 BCright, outlet
 
