@@ -106,6 +106,23 @@ void inputPrint(INPUT* input)
 
 }
 
+int inputNameIsInput(INPUT* input, char* name)
+{
+    
+    int found = 0;
+    
+    for(int ii=0; ii<input->N; ii++)
+    {                
+        if(strcmp(name, input->name[ii]) == 0)
+        {
+            found = 1;
+        }   
+    }
+    
+    return found;
+    
+}
+
 char* inputGetValue(INPUT* input, char* name)
 {
     

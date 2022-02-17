@@ -58,6 +58,11 @@ int main(int argc, char **argv)
 
     boundarySet(solver->bc);
   
+    if(inputNameIsInput(input, "pout"))
+    {
+        solver->pout = strtod(inputGetValue(input, "pout"), NULL);     
+    }      
+  
     // Constants
     solver->Rgas = 287.5;
     solver->gamma = 1.4;  
