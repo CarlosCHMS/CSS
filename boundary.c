@@ -46,6 +46,49 @@ void boundarySet(BOUNDARY* bc)
     
 }
 
+void boundaryInlet(SOLVER* solver, double* Ua, double* Ud, double* Ub, double nx, double ny)
+{
+
+    double rd = Ud[0];
+    double ud = Ud[1]/Ud[0];
+    double vd = Ud[2]/Ud[0];
+    double pd = (solver->gamma - 1)*(Ud[3] - 0.5*(ud*ud + vd*vd)*rd);
+
+    double c0 = sqrt(solver->gamma*pd/rd);    
+
+    double m = sqrt(ud*ud + vd*vd)/c0;
+    
+    if(m < 1.)
+    {
+
+        double ra = Ua[0];
+        double ua = Ua[1]/Ua[0];
+        double va = Ua[2]/Ua[0];
+        double pa = (solver->gamma - 1)*(Ua[3] - 0.5*(ua*ua + va*va)*ra);
+
+        double pb = 0.5*(pa + pd - rd*c0*(nx*(ua-ud) + ny*(va-vd)));
+        double rb = ra + (pb - pa)/(c0*c0);
+        double ub = ua - nx*(pa - pb)/(rd*c0);
+        double vb = va - ny*(pa - pb)/(rd*c0);
+
+        Ub[0] = rb;
+        Ub[1] = rb*ub;
+        Ub[2] = rb*vb;
+        Ub[3] = pb/(solver->gamma-1) + 0.5*(ub*ub + vb*vb)*rb;
+
+    }
+    else
+    {
+        for(int ii=0; ii<4; ii++)
+        {
+        
+            Ub[ii] = Ua[ii];
+
+        }
+    }    
+
+}
+
 void boundaryCalc(SOLVER* solver, double*** U, int ii, int jj, double dSx, double dSy, int flagBC, int flagWall)
 {
 
@@ -61,12 +104,12 @@ void boundaryCalc(SOLVER* solver, double*** U, int ii, int jj, double dSx, doubl
 	{
 		UL[kk] = U[kk][ii][jj];
 	}
-	
-    // Rotation of the velocity vectors
-    rotation(UL, dSx, dSy, dS);
 
     if(flagBC == 0)
     {
+
+        // Rotation of the velocity vectors
+        rotation(UL, dSx, dSy, dS);
     
         // Reflexive
         solverFlux(solver, UL[0], UL[1], UL[2], UL[3], UL[0], -UL[1], UL[2], UL[3], f);
@@ -75,20 +118,21 @@ void boundaryCalc(SOLVER* solver, double*** U, int ii, int jj, double dSx, doubl
     else if(flagBC == 1)
     {
 
-        // Inlet
-		for(kk=0; kk<4; kk++)
-		{
-			UR[kk] = solver->inlet->Uin[kk];
-		}
+        double Ub[4];
+
+        boundaryInlet(solver, solver->inlet->Uin, UL, Ub, dSx/dS, dSy/dS);
 
         // Rotation of the velocity vectors
-	    rotation(UR, dSx, dSy, dS);
+	    rotation(Ub, dSx, dSy, dS);
 
-		solverFlux(solver, UL[0], UL[1], UL[2], UL[3], UR[0], UR[1], UR[2], UR[3], f);
+		solverFluxFree(solver, Ub[0], Ub[1], Ub[2], Ub[3], f);
     
     }
     else if(flagBC == 2)
     {
+
+        // Rotation of the velocity vectors
+        rotation(UL, dSx, dSy, dS);
     
         // Outlet
         solverFluxFree(solver, UL[0], UL[1], UL[2], UL[3], f);
