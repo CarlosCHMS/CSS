@@ -86,17 +86,21 @@ class channel(basic):
                 self.y[ii + n0 + n1, jj] = dy*jj
                 
     def func(self, x):
+
+        b = self.x1/2    
+        #c**2 + b**2 = (a + c)**2
+        c = (b**2 - self.a**2)/(2*self.a)
     
-        b = self.x1/2
+
         x = x - b
-        y = numpy.sqrt(self.a**2 + b**2 - x**2) - self.a 
+        y = numpy.sqrt(c**2 + b**2 - x**2) - c 
                 
         return y        
 
              
 if __name__=='__main__':
 
-    w = channel(1, 1, 1, 40, 40, 40, 2)       
+    w = channel(1.5, 1, 1, 30, 20, 20, 0.1)       
     w.plot()        
     w.write()
     
