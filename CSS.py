@@ -22,6 +22,6 @@ if __name__=="__main__":
     print("\nCSS - A CFD code:\n")    
 
     os.system("rm ./executable %ssolution.csv" % (path))
-    os.system("gcc ./readTables.c ./input.c ./mesh.c ./solver.c -o ./executable -lm -fopenmp")
+    os.system("gcc ./readTables.c ./input.c ./mesh.c ./solver.c ./flux.c ./boundary.c ./main.c -o ./executable -lm -fopenmp")
     os.system("./executable %s" % path)
     os.system("python3 %sanalisys.py %s" % (path, path))
