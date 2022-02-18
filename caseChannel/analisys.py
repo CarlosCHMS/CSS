@@ -86,16 +86,12 @@ if __name__=="__main__":
         
     s.calcPMT()
         
-    """
-        
     plt.figure()
     plt.title("pressure")    
     plt.contourf(s.x, s.y, s.p)
     plt.axis("equal")
     plt.colorbar()
     plt.show()    
-       
-    """
         
     plt.figure()
     plt.title("mach")

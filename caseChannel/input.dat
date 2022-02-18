@@ -11,7 +11,7 @@ BCup, wall
 BCleft, inlet
 BCright, outlet
 
-Nmax, 30000
+Nmax, 100000
 interpE, 1e-5
 order, 2
 stages, 5
