@@ -303,7 +303,7 @@ void inter(SOLVER* solver, double ***U)
 			rotation(UR, dSx, dSy, dS);
             
             // Flux calculation
-            solverFlux(solver, UL[0], UL[1], UL[2], UL[3], UR[0], UR[1], UR[2], UR[3], f);
+            flux(solver, UL[0], UL[1], UL[2], UL[3], UR[0], UR[1], UR[2], UR[3], f);
 
             // Rotation of the flux
 			rotation(f, dSx, -dSy, dS);
@@ -375,7 +375,7 @@ void inter(SOLVER* solver, double ***U)
 			rotation(UR, dSx, dSy, dS);
             
             // Flux calculation
-            solverFlux(solver, UL[0], UL[1], UL[2], UL[3], UR[0], UR[1], UR[2], UR[3], f);
+            flux(solver, UL[0], UL[1], UL[2], UL[3], UR[0], UR[1], UR[2], UR[3], f);
 
             // Rotation of the flux
 			rotation(f, dSx, -dSy, dS);

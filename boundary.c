@@ -136,7 +136,7 @@ void boundaryCalc(SOLVER* solver, double*** U, int ii, int jj, double dSx, doubl
         rotation(UL, dSx, dSy, dS);
     
         // Reflexive
-        solverFlux(solver, UL[0], UL[1], UL[2], UL[3], UL[0], -UL[1], UL[2], UL[3], f);
+        flux(solver, UL[0], UL[1], UL[2], UL[3], UL[0], -UL[1], UL[2], UL[3], f);
 
     }
     else if(flagBC == 1)
@@ -149,7 +149,7 @@ void boundaryCalc(SOLVER* solver, double*** U, int ii, int jj, double dSx, doubl
 	    rotation(Ub, dSx, dSy, dS);
 
         //solverFlux(solver, UL[0], UL[1], UL[2], UL[3], Ub[0], Ub[1], Ub[2], Ub[3], f);
-		solverFluxFree(solver, Ub[0], Ub[1], Ub[2], Ub[3], f);
+		fluxFree(solver, Ub[0], Ub[1], Ub[2], Ub[3], f);
     
     }
     else if(flagBC == 2)
@@ -162,7 +162,7 @@ void boundaryCalc(SOLVER* solver, double*** U, int ii, int jj, double dSx, doubl
         rotation(UL, dSx, dSy, dS);
 	    rotation(Ub, dSx, dSy, dS);
     
-        solverFlux(solver, UL[0], UL[1], UL[2], UL[3], Ub[0], Ub[1], Ub[2], Ub[3], f);
+        flux(solver, UL[0], UL[1], UL[2], UL[3], Ub[0], Ub[1], Ub[2], Ub[3], f);
 		
     }
     else if(flagBC == 3)

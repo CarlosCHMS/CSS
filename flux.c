@@ -37,7 +37,7 @@ void entropyFix(SOLVER* solver, double *l)
 
 }
 
-void solverFluxRoe(SOLVER* solver, 
+void fluxRoe(SOLVER* solver, 
                double U0L, double U1L, double U2L, double U3L, 
                double U0R, double U1R, double U2R, double U3R,
 	           double* f)
@@ -107,7 +107,7 @@ void solverFluxRoe(SOLVER* solver,
 	}
 }
 
-void solverFluxAUSMD(SOLVER* solver, 
+void fluxAUSMD(SOLVER* solver, 
                double U0L, double U1L, double U2L, double U3L, 
                double U0R, double U1R, double U2R, double U3R,
 	           double* f)
@@ -160,7 +160,7 @@ void solverFluxAUSMD(SOLVER* solver,
 }
 
 
-void solverFluxFree(SOLVER* solver, 
+void fluxFree(SOLVER* solver, 
                double U0L, double U1L, double U2L, double U3L,
 	           double* f)
 {
@@ -168,7 +168,6 @@ void solverFluxFree(SOLVER* solver,
 	double uL = U1L/U0L;
 	double vL = U2L/U0L;
     double pL = (solver->gamma - 1)*(U3L - (uL*uL + vL*vL)*U0L/2);
-    double HL = (U3L + pL)/U0L;
 
     // Fluxes
 	f[0] = U1L;
@@ -178,17 +177,17 @@ void solverFluxFree(SOLVER* solver,
 
 }
 
-void solverFlux(SOLVER* solver, 
+void flux(SOLVER* solver, 
                double U0L, double U1L, double U2L, double U3L, 
                double U0R, double U1R, double U2R, double U3R,
 	           double* f)
 {	           
 	if(solver->flux == 0)
 	{
-        solverFluxRoe(solver, U0L, U1L, U2L, U3L, U0R, U1R, U2R, U3R, f);
+        fluxRoe(solver, U0L, U1L, U2L, U3L, U0R, U1R, U2R, U3R, f);
     }
     else if(solver->flux == 1)     
     {
-        solverFluxAUSMD(solver, U0L, U1L, U2L, U3L, U0R, U1R, U2R, U3R, f);
+        fluxAUSMD(solver, U0L, U1L, U2L, U3L, U0R, U1R, U2R, U3R, f);
     }
 }
