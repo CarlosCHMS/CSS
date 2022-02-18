@@ -68,6 +68,14 @@ int main(int argc, char **argv)
     solver->gamma = 1.4;  
     solver->eFix = 0.1;
     solver->e = strtod(inputGetValue(input, "interpE"), NULL);
+    if(inputNameIsInput(input, "CFL"))
+    {
+        solver->CFL = strtod(inputGetValue(input, "CFL"), NULL);     
+    }
+    else
+    {
+        solver->CFL = 1.0;
+    }
     
     // Seletion of MUSCL and flux
     solver->MUSCL = atoi(inputGetValue(input, "order")) - 1;

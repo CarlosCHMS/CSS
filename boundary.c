@@ -145,26 +145,24 @@ void boundaryCalc(SOLVER* solver, double*** U, int ii, int jj, double dSx, doubl
         boundaryInlet(solver, solver->inlet->Uin, UL, Ub, dSx/dS, dSy/dS);
 
         // Rotation of the velocity vectors
+        rotation(UL, dSx, dSy, dS);
 	    rotation(Ub, dSx, dSy, dS);
 
+        //solverFlux(solver, UL[0], UL[1], UL[2], UL[3], Ub[0], Ub[1], Ub[2], Ub[3], f);
 		solverFluxFree(solver, Ub[0], Ub[1], Ub[2], Ub[3], f);
     
     }
     else if(flagBC == 2)
     {
 
-        /*
+        
         boundaryOutlet(solver, UL, Ub, dSx/dS, dSy/dS);
 
         // Rotation of the velocity vectors
+        rotation(UL, dSx, dSy, dS);
 	    rotation(Ub, dSx, dSy, dS);
-
-		solverFluxFree(solver, Ub[0], Ub[1], Ub[2], Ub[3], f);
-		*/
-		
-		rotation(UL, dSx, dSy, dS);
-
-		solverFluxFree(solver, UL[0], UL[1], UL[2], UL[3], f);
+    
+        solverFlux(solver, UL[0], UL[1], UL[2], UL[3], Ub[0], Ub[1], Ub[2], Ub[3], f);
 		
     }
     else if(flagBC == 3)

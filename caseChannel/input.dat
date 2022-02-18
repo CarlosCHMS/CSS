@@ -11,7 +11,7 @@ BCup, wall
 BCleft, inlet
 BCright, outlet
 
-Nmax, 50000
+Nmax, 30000
 interpE, 1e-5
 order, 2
 stages, 5
@@ -19,3 +19,4 @@ threads, 4
 flux, AUSMD 
 tube, 0
 axisymmetric, 0
+CFL, 0.1

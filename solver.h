@@ -45,6 +45,7 @@ typedef struct {
     double k; 
     double res0[4];
     double res[4];
+    double CFL;
             
     double ***U;
     double ***R;

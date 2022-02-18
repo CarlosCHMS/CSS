@@ -456,11 +456,7 @@ double solverCalcDt(SOLVER* solver)
         }
     }
 
-    if(solver->MUSCL==1)
-    {
-        // Subsonic second order cases does not converge without this.
-        dtMin /= 2.;
-    }
+    dtMin *= solver->CFL;    
 
     return dtMin;
 

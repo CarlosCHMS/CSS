@@ -100,7 +100,7 @@ class channel(basic):
              
 if __name__=='__main__':
 
-    w = channel(1.5, 1, 1, 30, 20, 20, 0.1)       
+    w = channel(1.5, 1, 1, 60, 40, 40, 0.042)       
     w.plot()        
     w.write()
     
