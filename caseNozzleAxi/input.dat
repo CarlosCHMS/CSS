@@ -10,6 +10,8 @@ BCup, wall
 BCleft, inlet
 BCright, outlet
 
+pout, 1e3
+
 Nmax, 4000
 interpE, 1e-10
 order, 2

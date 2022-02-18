@@ -85,17 +85,14 @@ if __name__=="__main__":
     s = solution(path+"mesh.csv", path+"./solution.csv")        
         
     s.calcPMT()
-        
-    """
+            
         
     plt.figure()
     plt.title("pressure")    
     plt.contourf(s.x, s.y, s.p)
     plt.axis("equal")
     plt.colorbar()
-    plt.show()    
-       
-    """
+    plt.show()        
         
     plt.figure()
     plt.title("mach")
