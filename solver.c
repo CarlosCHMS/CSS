@@ -150,6 +150,26 @@ void solverResetR(SOLVER* solver)
     }
 }
 
+void solverWriteR(SOLVER* solver)
+{
+
+    FILE* ff = fopen("./R.txt", "w");
+    for(int kk=0; kk<4; kk++)
+    {
+        for(int jj=0; jj<solver->Ncol; jj++)
+        {
+            for(int ii=0; ii<solver->Nrow; ii++)
+            {
+                fprintf(ff, " %f,", solver->R[kk][ii][jj]);
+            }
+            fprintf(ff, "\n");
+        }
+        fprintf(ff, "\n");
+    }
+    fclose(ff);
+}
+
+
 void solverMatFree(SOLVER* solver, double** M, int Nrow)
 {
     for(int ii=0; ii<Nrow; ii++)
@@ -470,6 +490,9 @@ void solverCalcR(SOLVER* solver, double*** U)
     inter(solver, U);
     
     boundary(solver, U);  
+    
+    //solverWriteR(solver);
+    //exit(0);
     
     if(solver->mesh->axi==1)
     {

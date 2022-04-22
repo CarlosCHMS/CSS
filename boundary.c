@@ -142,27 +142,26 @@ void boundaryCalc(SOLVER* solver, double*** U, int ii, int jj, double dSx, doubl
     else if(flagBC == 1)
     {
 
-        boundaryInlet(solver, solver->inlet->Uin, UL, Ub, dSx/dS, dSy/dS);
-
-        // Rotation of the velocity vectors
         rotation(UL, dSx, dSy, dS);
+        
+        for(kk=0; kk<4; kk++)
+        {
+            Ub[kk] = solver->inlet->Uin[kk];
+        }
+        
 	    rotation(Ub, dSx, dSy, dS);
 
-        //solverFlux(solver, UL[0], UL[1], UL[2], UL[3], Ub[0], Ub[1], Ub[2], Ub[3], f);
-		fluxFree(solver, Ub[0], Ub[1], Ub[2], Ub[3], f);
+        flux(solver, UL[0], UL[1], UL[2], UL[3], Ub[0], Ub[1], Ub[2], Ub[3], f);
+		//fluxFree(solver, Ub[0], Ub[1], Ub[2], Ub[3], f);
     
     }
     else if(flagBC == 2)
     {
 
-        
-        boundaryOutlet(solver, UL, Ub, dSx/dS, dSy/dS);
-
         // Rotation of the velocity vectors
         rotation(UL, dSx, dSy, dS);
-	    rotation(Ub, dSx, dSy, dS);
     
-        flux(solver, UL[0], UL[1], UL[2], UL[3], Ub[0], Ub[1], Ub[2], Ub[3], f);
+        flux(solver, UL[0], UL[1], UL[2], UL[3], UL[0], UL[1], UL[2], UL[3], f);
 		
     }
     else if(flagBC == 3)
@@ -173,37 +172,12 @@ void boundaryCalc(SOLVER* solver, double*** U, int ii, int jj, double dSx, doubl
         */        
 
 		double p2 = solverCalcP(solver, U, ii, jj);
-		double p3, p4;
-		
-        if(flagWall == 0)
-        {
-	        p3 = solverCalcP(solver, U, ii, jj+1);
-	        p4 = solverCalcP(solver, U, ii, jj+2);
-        }
-        else if(flagWall == 1)
-        {
-	        p3 = solverCalcP(solver, U, ii, jj-1);
-	        p4 = solverCalcP(solver, U, ii, jj-2);
-        }
-        else if(flagWall == 2)
-        {
-	        p3 = solverCalcP(solver, U, ii+1, jj);
-	        p4 = solverCalcP(solver, U, ii+2, jj);
-        }
-        else if(flagWall == 3)
-        {
-	        p3 = solverCalcP(solver, U, ii-1, jj);
-	        p4 = solverCalcP(solver, U, ii-2, jj);
-        }
-	
-        // Outlet
+
         f[0] = .0;
         f[2] = .0;
         f[3] = .0;
 
-        //f[1] =  p2;
-        //f[1] =  0.5*(3*p2 - p3);
-        f[1] =  0.125*(15*p2 - 10*p3 + 3*p4);
+        f[1] =  p2;
 
     }
 
